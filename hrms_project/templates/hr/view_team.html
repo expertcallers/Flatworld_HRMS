@@ -1,0 +1,105 @@
+{% extends 'hr/base.html' %}
+
+{% load static %}
+{% block main %}
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="page-title">
+              <div class="title_left">
+                <h3>Departments</h3>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card">
+                  <div class="card-body">
+                      <div class="row">
+                          <div class="col-md-8"></div>
+                          <div class="col-md-4" align="right">
+                              <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#add">
+                                  <i class="fa fa-plus"> </i> Add New
+                              </button>
+                          </div>
+                      </div>
+                      <div class="row">
+                          <div class="col-md-12">
+                            <table  id="datatablex" class="table table-striped" style="max-width: 100% !important;">
+                              <thead>
+                                <tr>
+                                    <th>Departments</th>
+                                    <th>Manager</th>
+                                </tr>
+                              </thead>
+                              <tfoot>
+                                <tr>
+                                    <th>Departments</th>
+                                    <th>Manager</th>
+                                </tr>
+                              </tfoot>
+                              <tbody>
+                              {% for i in teams %}
+                                <tr>
+                                    <td>{{i.name}}</td>
+                                    <td>{{i.om}}</td>
+                                </tr>
+                              {% endfor %}
+                              </tbody>
+                            </table>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+        <!-- /page content -->
+
+
+<div class="modal fade" id="add" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Add New Team</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form action="/add-newteam" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="modal-body">
+              <div class="row">
+                <div class="col-md-6 form-group">
+                    <label for="name">Name <span class="required">*</span></label>
+                    <input type="text" id="name" name="campaign" class="form-control" required>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="om">Manager <span class="required">*</span></label>
+                    <select name="om" id="om" class="form-control select2" required>
+                        <option value="" disabled selected> -- Please Select -- </option>
+                        {% for i in managers %}
+                        <option value="{{i.emp_id}}">{{i.emp_name}} ({{i.emp_id}})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+<script>
+  $('#datatablex').DataTable( {
+      responsive: true
+  } );
+</script>
+{% endblock %}
+

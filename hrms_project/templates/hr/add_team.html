@@ -1,0 +1,58 @@
+{% extends 'hr/base.html' %}
+{% block main %}
+  {% load static %}
+        <!-- page content -->
+        <div class="right_col" role="main">
+
+          <div class="page-title">
+            <div class="title_left">
+              <h3>Add New Team</h3>
+            </div>
+          </div>
+          <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-body">
+                <form method="POST" action="/add-newteam" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label for="team_name">Team Name</label>
+                        <input type="text" name="campaign" id="team_name" class="form-control" required>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label for="emp_rm1">Manager</label>
+                        <select name="om" id="emp_rm1" class="form-control select2" required>
+                          <option value="" selected disabled>Please select</option>
+                          {% for m in mgrs %}
+                          <option value="{{m.emp_name}}">{{m.emp_name}}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <div class="col-md-12" align="center">
+                        <button type="submit" class="form-control mt-4 btn btn-success btn-lg" onclick="return confirmm();">Submit</button>
+                      </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+        </div>
+        <!-- /page content -->
+
+
+  {% endblock %}

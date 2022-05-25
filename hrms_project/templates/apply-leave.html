@@ -1,0 +1,567 @@
+{% extends 'base_common.html' %}
+
+{% block main %}
+  {% load static %}
+        <!-- page content -->
+        <div class="right_col" role="main">
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <div class="card">
+                <div class="card-header">
+                  <h4>Total Leave Balance</h4>
+                </div>
+                <div class="card-body" align="center">
+                  <h1 style="font-size: 64px;" id="total_leave"></h1>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card">
+                <div class="card-header">
+                  <h4>Earned Leave Balance</h4>
+                </div>
+                <div class="card-body" align="center">
+                  <h1 style="font-size: 64px;" id="leave_bal">
+                    {% if probation >=  90 %}
+                      {{leave_balance.pl_balance|floatformat:2}}
+                    {% else %}
+                      <span style="font-size:25px">Probation Period</span>
+                    {% endif %}
+                  </h1>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card">
+                <div class="card-header">
+                  <h4>Sick Leave Balance</h4>
+                </div>
+                <div class="card-body" align="center">
+                  <h1 style="font-size: 64px;" id="s_leave_bal">
+                    {% if probation >=  90 %}
+                      {{leave_balance.sl_balance|floatformat:2}}
+                    {% else %}
+                      <span style="font-size:25px">Probation Period</span>
+                    {% endif %}
+                  </h1>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mt-5 pt-5" align="center">
+              <button class="btn btn-success btn-lg" data-toggle="modal" data-target="#leave_bal_history">Know your Leave Balance History</button>
+            </div>
+          </div>
+          <form action="/ams-apply_leave" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h4>Apply for Leave</h4>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-3">
+                        <label for="type">Select type of Leave</label>
+                        <select name="type" class="form-control" id="type">
+                          <option value="" selected disabled>Please Select</option>
+                          <option value="PL">Earned Leave</option>
+                          <option value="SL">Sick Leave</option>
+                        </select>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="leave">Select the Dates</label>
+                        <div class="control-group ">
+                          <div class="controls">
+                            <div class="input-prepend input-group">
+                              <span class="add-on input-group-addon"><i class="fa fa-calendar pt-1"></i></span>
+                              <input type="text" style="width: 200px" id="leave" class="form-control" value="" />
+                            </div>
+                          </div>
+                        </div>
+                        <input type="hidden" name="startdate" id="startdate">
+                        <input type="hidden" name="enddate" id="enddate">
+                      </div> 
+                      <div class="col-md-2">
+                        <label for="leave_days">Number of days</label>
+                        <input type="number" name="leave_days" id="leave_days" class="form-control" readonly>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="reason">Reason for applying</label>
+                        <textarea id="reason" name="reason" class="form-control" required></textarea>
+                      </div>
+                      <div>
+                        <input type="hidden" name="emp_id" value="{{emp.emp_id}}">
+                        <input type="hidden" name="emp_name" value="{{emp.emp_name}}">
+                        <input type="hidden" name="emp_process" value="{{emp.emp_process}}">
+                        <input type="hidden" name="emp_desi" value="{{emp.emp_desi}}">
+                        <input type="hidden" name="emp_rm1" value="{{emp.emp_rm1_id}}">
+                        <input type="hidden" name="emp_rm2" value="{{emp.emp_rm2_id}}">
+                        <input type="hidden" name="emp_rm3" value="{{emp.emp_rm3_id}}">
+                      </div>
+                      <div class="col-md-12 mt-4 pt-1" id="mybutton">
+                        <button class="form-control btn btn-success" onclick="return confirmm();" id="mysubmit">Submit</button>
+                      </div>
+                    </div>
+                  </div>
+                </div> 
+              </div>
+            </div>
+          </form>
+          <div class="row mt-4 pb-4">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header">
+                  <h4>Leave Status</h4>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-12">
+                      <table  id="datatablex" class="table table-striped" style="max-width: 100% !important;">
+                        <thead>
+                          <tr>
+                            <th class="align-middle align-center" style="text-align: center;">ID</th>
+                            <th class="align-middle align-center" style="text-align: center;">Applied On</th>
+                            <th class="align-middle align-center" style="text-align: center;">Applied For Dates</th>
+                            <th class="align-middle align-center" style="text-align: center;">Number of days</th>
+                            <th class="align-middle align-center" style="text-align: center;">Leave Type</th>
+                            <th class="align-middle align-center" style="width: 250px;text-align: center;">Reason</th>
+                            <th class="align-middle align-center" style="text-align: center;">TL Approval</th>
+                            <th class="align-middle align-center" style="text-align: center;">TL Comments</th>
+                            <th class="align-middle align-center" style="text-align: center;">OM Approval</th>
+                            <th class="align-middle align-center" style="text-align: center;">OM Comments</th>
+                            <th class="align-middle align-center" style="text-align: center;">Status</th>
+                          </tr>
+                        </thead>
+                        <tfoot>
+                          <tr>
+                            <th class="align-middle align-center" style="text-align: center;">ID</th>
+                            <th class="align-middle align-center" style="text-align: center;">Applied On</th>
+                            <th class="align-middle align-center" style="text-align: center;">Applied For Dates</th>
+                            <th class="align-middle align-center" style="text-align: center;">Number of days</th>
+                            <th class="align-middle align-center" style="text-align: center;">Leave Type</th>
+                            <th class="align-middle align-center" style="width: 250px;text-align: center;">Reason</th>
+                            <th class="align-middle align-center" style="text-align: center;">TL Approval</th>
+                            <th class="align-middle align-center" style="text-align: center;">TL Comments</th>
+                            <th class="align-middle align-center" style="text-align: center;">OM Approval</th>
+                            <th class="align-middle align-center" style="text-align: center;">OM Comments</th>
+                            <th class="align-middle align-center" style="text-align: center;">Status</th>
+                          </tr>
+                        </tfoot>
+                        <tbody>
+                        {% for i in leave %}
+                          <tr>
+                              <td>{{i.id}}</td>
+                              <td>{{i.applied_date}}</td>
+                              <td>{{i.start_date}} to {{i.end_date}}</td>
+                              <td>{{i.no_days}}</td>
+                              <td>
+                                {% if i.leave_type == 'PL' %}EL{% else %}{{i.leave_type}}{% endif %}
+                              </td>
+                              <td><p>{{i.agent_reason}}</p></td>
+                              <td>
+                                {% if i.tl_status %}
+                                {{i.tl_status}}
+                                {% else %}
+                                Pending
+                                {% endif %}
+                              </td>
+                              <td>
+                                <p>
+                                  {% if i.tl_reason %}
+                                  {{i.tl_reason}}
+                                  {% else %}
+                                  Pending
+                                  {% endif %}
+                                </p>
+                              </td>
+                              <td>
+                                {% if i.manager_status %}
+                                {{i.manager_status}}
+                                {% else %}
+                                Pending
+                                {% endif %}
+                              </td>
+                              <td>
+                                <p>
+                                  {% if i.manager_reason %}
+                                  {{i.manager_reason}}
+                                  {% else %}
+                                  Pending
+                                  {% endif %}
+                                </p>
+                              </td>
+                              <td align="center">
+                                {% if i.status %}
+                                  {{i.status}}
+                                {% else %}
+                                  Pending
+                                {% endif %}
+                                {% if i.tl_status == "Rejected" and i.manager_approval == False and i.escalation == False %}<br>
+                                <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#view_{{i.id}}">Leave Appeal</button>
+                                {% endif %}
+                                {% if i.tl_status == "Rejected" and i.manager_approval == False and i.escalation == True %}
+                                <p>Applied for Escalation</p>
+                                {% endif %}
+                                {% if i.leave_type == "SL" and i.no_days > 1 and i.manager_approval == False %}
+                                <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#proof_{{i.id}}">Proof</button>
+                                {% endif %}
+                              </td>
+                          </tr>
+                        {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div> 
+            </div>
+          </div>
+        </div>
+        <!-- /page content -->
+
+    <!-- Start Escalate Pop-Up -->
+{% for i in leave %}
+  {% if i.tl_status == "Rejected" and i.manager_approval == False %}
+      <div class="modal fade" id="view_{{i.id}}" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLongTitle">View Request</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+              <form action="/ams/apply-escalation" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-md-6 mt-2">
+                    <label for="emp_name">Employee Name</label>
+                    <input type="text" disabled value="{{i.emp_name}}" id="emp_name" class="form-control">
+                  </div>
+                  <div class="col-md-6 mt-2">
+                    <label for="emp_id">Employee ID</label>
+                    <input type="text" disabled value="{{i.emp_id}}"  name="emp_id" id="emp_id" class="form-control">
+                  </div>
+                  <div class="col-md-4 mt-2">
+                    <label for="app_on">Applied On</label>
+                    <input type="text" disabled value="{{i.applied_date}}" id="app_on" class="form-control">
+                  </div>
+                  <div class="col-md-8 mt-2">
+                    <label for="app_for">Applied For Dates</label>
+                    <input type="text" disabled value="{{i.start_date}} to {{i.end_date}}" id="app_for" class="form-control">
+                  </div>
+                  <div class="col-md-6 mt-2">
+                    <label for="num_days">Number of Days</label>
+                    <input type="text" disabled value="{{i.no_days}}" id="num_days" class="form-control">
+                  </div>
+                  <div class="col-md-6 mt-2">
+                    <label for="leave_type">Leave Type</label>
+                    <input type="text" disabled  value="{% if i.leave_type == 'PL' %}EL{% else %}{{i.leave_type}}{% endif %}" id="leave_type" class="form-control">
+                  </div>
+                  <div class="col-md-6 mt-2">
+                    <label for="reason_esc">Reason / Comments</label>
+                    <textarea id="reason_esc" name="reason" class="form-control" rows="3" required></textarea>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <input type="hidden" name="id" value="{{i.id}}">
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" onclick="return confirmm();" class="btn btn-success">Escalate</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+  {% endif %}
+{% endfor %}
+    <!-- End EscalatePop-Up -->
+
+
+    <!-- Start Proof Pop-Up -->
+{% for i in leave %}
+  {% if i.leave_type == "SL" and i.no_days > 1 and i.manager_approval == False %}
+      <div class="modal fade" id="proof_{{i.id}}" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="View_Request">View Request</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <form action="/ams/sl-proof" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-md-6 mt-2">
+                    <label for="proof_emp_name">Employee Name</label>
+                    <input type="text" disabled value="{{i.emp_name}}" id="proof_emp_name" class="form-control">
+                  </div>
+                  <div class="col-md-6 mt-2">
+                    <label for="proof_emp_id">Employee ID</label>
+                    <input type="text" disabled value="{{i.emp_id}}"  name="emp_id" id="proof_emp_id" class="form-control">
+                  </div>
+                  <div class="col-md-4 mt-2">
+                    <label for="proof_app_on">Applied On</label>
+                    <input type="text" disabled value="{{i.applied_date}}" id="proof_app_on" class="form-control">
+                  </div>
+                  <div class="col-md-8 mt-2">
+                    <label for="proof_app_for">Applied For Dates</label>
+                    <input type="text" disabled value="{{i.start_date}} to {{i.end_date}}" id="proof_app_for" class="form-control">
+                  </div>
+                  <div class="col-md-6 mt-2">
+                    <label for="proof_num_days">Number of Days</label>
+                    <input type="text" disabled value="{{i.no_days}}" id="proof_num_days" class="form-control">
+                  </div>
+                  <div class="col-md-6 mt-2">
+                    <label for="proof_leave_type">Leave Type</label>
+                    <input type="text" disabled  value="{% if i.leave_type == 'PL' %}EL{% else %}{{i.leave_type}}{% endif %}" id="proof_leave_type" class="form-control">
+                  </div>
+                  <div class="col-md-6 mt-2">
+                    <label for="proof">Upload Proof</label>
+                    {% if i.proof %}
+                    <a href="/media/{{i.proof}}" target="_blank" id="proof">
+                      <button type="button" class="btn btn-primary form-control">View</button>
+                    </a>
+                    {% else %}
+                    <input type="file" id="prooff_{{i.id}}" name="proof" class="form-control uploadFile" required accept=".png, .jpg, .jpeg, .pdf">
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <input type="hidden" name="id" value="{{i.id}}">
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                {% if i.proof%}
+                {% else %}
+                <button type="submit" onclick="return confirmm();" class="btn btn-success">Submit Proof</button>
+                {% endif %}
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+  {% endif %}
+{% endfor %}
+    <!-- End Proof Pop-Up -->
+
+
+    <!-- Start Leave Balance History Pop-Up -->
+      <div class="modal fade" id="leave_bal_history" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="View_bal_history">Leave Balance History</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-md-12">
+                    <table  id="datatable_two" class="table table-striped" style="width: 100% !important;">
+                      <thead>
+                          <tr>
+                            <th class="align-middle align-center" style="text-align: center;">ID</th>
+                            <th class="align-middle align-center" style="text-align: center;">Date</th>
+                            <th class="align-middle align-center" style="text-align: center;">Leave type</th>
+                            <th class="align-middle align-center" style="text-align: center;">Transaction</th>
+                            <th class="align-middle align-center" style="text-align: center;">Number of days</th>
+                            <th class="align-middle align-center" style="text-align: center;">Total Balance</th>
+                          </tr>
+                      </thead>
+                      <tfoot>
+                          <tr>
+                            <th class="align-middle align-center" style="text-align: center;">ID</th>
+                            <th class="align-middle align-center" style="text-align: center;">Date</th>
+                            <th class="align-middle align-center" style="text-align: center;">Leave type</th>
+                            <th class="align-middle align-center" style="text-align: center;">Transaction</th>
+                            <th class="align-middle align-center" style="text-align: center;">Number of days</th>
+                            <th class="align-middle align-center" style="text-align: center;">Total Balance</th>
+                          </tr>
+                      </tfoot>
+                      <tbody>
+                        {% for i in leave_his %}
+                          <tr>
+                            <td>{{i.id}}</td>
+                            <td>{{i.date}}</td>
+                            <td>{% if i.leave_type == 'PL' %}EL{% else %}{{i.leave_type}}{% endif %}</td>
+                            <td>{{i.transaction}}</td>
+                            <td>{{i.no_days|floatformat:2}}</td>
+                            <td>{{i.total|floatformat:2}}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              </div>
+          </div>
+        </div>
+      </div>
+    <!-- End Leave Balance History Pop-Up -->
+{% endblock %}
+
+{% block script %}
+
+<script type="text/javascript">
+      var currentDate = new Date();
+      var day = currentDate.getDate();
+      var month = currentDate.getMonth() + 1;
+      var year = currentDate.getFullYear();
+      var total = $('#total_leave');
+      var myele = $('#mysubmit');
+      var ldays = $('#leave_days').val();
+      var number;
+      var type=0;
+      var n = 0;
+      var lbal = parseInt($('#leave_bal').html());
+      var sbal = parseInt($('#s_leave_bal').html());
+      var type1 = $('#type').change(function() {
+        n += 1
+        if ( n == 2 ) {
+          location.reload();
+        }
+        type=$(this).val();
+        $('#leave').val('');
+        $('#leave_days').val('');
+        if ($('#leave').val()=="") {
+          myele.attr("disabled","disabled");
+        }
+        if (type == "SL") {
+          $('#leave').daterangepicker({
+                  autoUpdateInput: false,
+                  maxDate: (day+"/"+(month)+"/"+year),
+                  minDate: (day+"/"+(month-1)+"/"+year),
+                  autoApply: true,
+                  drops: 'auto',
+                  locale: {
+                      cancelLabel: 'Clear',
+                      format: 'DD/MM/YYYY'
+                  }
+              }, function (start, end, label) {
+                  const date1 = new Date(start),
+                        date2 = new Date(end),
+                        time_difference = difference(date1,date2)
+                  number = difference(date1,date2)+1;
+          });
+          $('#leave').on('apply.daterangepicker', function(ev, picker) {
+              $(this).val(picker.startDate.format('YYYY/MM/DD') + ' - ' + picker.endDate.format('YYYY/MM/DD'));
+              $('#leave_days').val(number);
+              if ($(this).val()!="" && type=="") {
+                alert("Please choose leave type FIRST.");
+              }
+              if (($('#leave').val()!="") && ($('#leave_days').val()=="")) {
+                myele.removeAttr("disabled","disabled");
+              }
+              if ( type=="PL" && lbal < number ) {
+                myele.attr("disabled","disabled");
+                alert(type+" Balance is not sufficient. Please choose lesser days. :)");
+              } else if ( type=="SL" && sbal < number ) {
+                myele.attr("disabled","disabled");
+                alert(type+" Balance is not sufficient. Please choose lesser days. :)");
+              } else if ( type==0 ) {
+                myele.attr("disabled","disabled");
+              } else {
+                myele.removeAttr("disabled","disabled");
+              }
+              $('#startdate').val(picker.startDate.format('YYYY-MM-DD'));
+              $('#enddate').val(picker.endDate.format('YYYY-MM-DD'));
+          });
+        } else {
+          $('#leave').daterangepicker({
+                  autoUpdateInput: false,
+                  minDate: (day+"/"+(month-1)+"/"+year),
+                  autoApply: true,
+                  drops: 'auto',
+                  locale: {
+                      cancelLabel: 'Clear',
+                      format: 'DD/MM/YYYY'
+                  }
+              }, function (start, end, label) {
+                  const date1 = new Date(start),
+                        date2 = new Date(end),
+                        time_difference = difference(date1,date2)
+                  number = difference(date1,date2)+1;
+          });
+          $('#leave').on('apply.daterangepicker', function(ev, picker) {
+              $(this).val(picker.startDate.format('YYYY/MM/DD') + ' - ' + picker.endDate.format('YYYY/MM/DD'));
+              $('#leave_days').val(number);
+              if ($(this).val()!="" && type=="") {
+                alert("Please choose leave type FIRST.");
+              }
+              if (($('#leave').val()!="") && ($('#leave_days').val()=="")) {
+                myele.removeAttr("disabled","disabled");
+              }
+              if ( type=="PL" && lbal < number ) {
+                myele.attr("disabled","disabled");
+                alert(type+" Balance is not sufficient. Please choose lesser days. :)");
+              } else if ( type=="SL" && sbal < number ) {
+                myele.attr("disabled","disabled");
+                alert(type+" Balance is not sufficient. Please choose lesser days. :)");
+              } else if ( type==0 ) {
+                myele.attr("disabled","disabled");
+              } else {
+                myele.removeAttr("disabled","disabled");
+              }
+              $('#startdate').val(picker.startDate.format('YYYY-MM-DD'));
+              $('#enddate').val(picker.endDate.format('YYYY-MM-DD'));
+          });
+        }
+      });
+
+      $('#leave').on('cancel.daterangepicker', function(ev, picker) {
+          $(this).val('');
+      });
+      myele.attr("disabled","disabled");
+      if (isNaN(lbal)){
+        lbal=0;
+      }
+      if (isNaN(sbal)){
+        sbal=0;
+      }
+      total.html(lbal+sbal);
+      function difference(date1, date2) {
+        const date1utc = Date.UTC(date1.getFullYear(), date1.getMonth(), date1.getDate());
+        const date2utc = Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate());
+        day = 1000*60*60*24;
+        return(date2utc - date1utc)/day
+      }
+</script>
+
+<script type="text/javascript">
+  var MAX_FILE_SIZE = 4096 * 1024; // 4 MB
+  $(document).ready(function() {
+      $('.uploadFile').change(function() {
+          var fileInput = this;
+          var filePath = fileInput.value;
+          var allowedExtensions =  /(\.jpg|\.jpeg|\.png|\.pdf)$/i;
+          if (!allowedExtensions.exec(filePath)) {
+              fileInput.setCustomValidity("Only PDF and Images (.png, .jpg, .jpeg) are accepted");
+              fileInput.reportValidity();
+              return false;
+          } else {
+              fileInput.setCustomValidity("");
+          }
+          fileSize = this.files[0].size;
+          if (fileSize > MAX_FILE_SIZE) {
+              this.setCustomValidity("File must not exceed 4 MB!");
+              this.reportValidity();
+          } else {
+              this.setCustomValidity("");
+          }
+      });
+  });
+</script>
+
+{% endblock %}

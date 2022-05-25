@@ -1,0 +1,162 @@
+{% extends 'hr/base.html' %}
+{% block main %}
+  {% load static %}
+
+ <!-- page content -->
+        <div class="right_col" role="main">
+          <!-- top tiles -->
+          <div class="row" >
+        </div>
+          <!-- /top tiles -->
+
+        <div class="page-title">
+          <div class="title_left">
+            <h3>Add New User</h3>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-body">
+                <form method="POST" action="/add-new-user" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <div class="row">
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <label for="emp_name">Employee Name <span class="required">*</span></label>
+                        <input type="text" name="emp_name" id="emp_name" class="form-control" required>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-group">
+                        <label for="emp_id">Employee ID <span class="required">*</span></label>
+                        <input type="text" name="emp_id" value="{{last_emp_id}}" id="emp_id" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-group">
+                        <label for="emp_doj">Date of Joining <span class="required">*</span></label>
+                        <input type="date" name="emp_doj" id="emp_doj" class="form-control" required>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-group">
+                        <label for="emp_dob">Date of Birth <span class="required">*</span></label>
+                        <input type="date" name="emp_dob" id="emp_dob" class="form-control" required>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <div class="row">
+                          <div class="col-md-12">
+                            <label for="emp_desg">Designation <span class="required">*</span></label>
+                            <select name="emp_desg" id="emp_desg" class="form-control select2" required>
+                             <option value="" selected disabled>Please select</option>
+                              {% for a in all_data %}
+                              <option value="{{a.name}}">{{a.name}}</option>
+                              {% endfor %}
+                            </select>
+                            <center>
+                              <button type="button" class="btn btn-sm btn-primary mt-2" data-toggle="modal" data-target="#add_desg">Add New Designation</button>
+                            </center>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <label for="emp_rm1">RM1 <span class="required">*</span></label>
+                        <select name="emp_rm1_id" id="emp_rm1" class="form-control select2" required>
+                          <option value="" selected disabled>Please select</option>
+                          {% for r in rms %}
+                          <option value="{{r.emp_id}}">{{r.emp_name}} / {{r.emp_id}}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <label for="emp_rm2">RM2</label>
+                        <select name="emp_rm2_id" id="emp_rm2" class="form-control select2">
+                          <option value="" selected disabled>Please select</option>
+                          {% for r in rms %}
+                          <option value="{{r.emp_id}}">{{r.emp_name}} / {{r.emp_id}}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <label for="emp_rm3">RM3</label>
+                        <select name="emp_rm3_id" id="emp_rm3" class="form-control select2">
+                          <option value="" selected disabled>Please select</option>
+                          {% for r in rms %}
+                          <option value="{{r.emp_id}}">{{r.emp_name}} / {{r.emp_id}}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <label for="emp_pro">Department <span class="required">*</span></label>
+                        <select name="emp_pro" id="emp_pro" class="form-control select2" required>
+                          <option value="" selected disabled>Please select</option>
+                          {% for a in all_team %}
+                              <option value="{{a.id}}">{{a.name}}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12" align="center">
+                      <button type="submit" class="btn btn-success btn-lg" onclick="return confirmm();">Submit</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+        </div>
+
+
+        </div>
+        <!-- /page content -->
+
+
+    <!-- Start New Designation Pop-Up -->
+      <div class="modal fade" id="add_desg" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLongTitle">Add New Designation</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <form method="POST" action="/add-new-designation" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label for="new_desg">Designation Name</label>
+                      <input type="text" name="new_desg" id="new_desg" required class="form-control">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" onclick="return confirmm();" class="btn btn-primary">Save changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    <!-- End New Designation Pop-Up -->
+ {% endblock %}
