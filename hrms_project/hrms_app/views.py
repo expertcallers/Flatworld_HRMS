@@ -12,7 +12,9 @@ import calendar
 
 from .models import *
 
-hr_list = []
+hr_list = ['HR']
+agent_list = ['Agent']
+manager_list = ['Manager']
 
 
 # Create your views here.
@@ -21,7 +23,6 @@ def loginPage(request):  # Test1 Test2
     form = AuthenticationForm()
     data = {'form': form}
     return render(request, 'login.html', data)
-
 
 def loginAndRedirect(request):
     if request.method == 'POST':
@@ -33,7 +34,7 @@ def loginAndRedirect(request):
                 if request.user.profile.pc == False:
                     return redirect('/change-password')
                 else:
-                    return redirect('/hr-dashboard')
+                    return redirect('/dashboard')
             else:
                 messages.info(request, 'You are Inactive. Please contact HR.')
                 return redirect("/")
@@ -67,7 +68,15 @@ def change_password(request):  # Test1 Test2
 @login_required
 def DashboardRedirect(request):
     emp_desi = request.user.profile.emp_desi
-    return redirect("/hr-dashboard")
+    if emp_desi in hr_list:
+        return redirect("/hr-dashboard")
+    elif emp_desi in agent_list:
+        return redirect("/agent-dashboard")
+    elif emp_desi in manager_list:
+        return redirect("/manager-dashboard")
+    else:
+        messages.info(request,'Invalid Request.')
+        return redirect("/")
 
 
 @login_required
@@ -138,38 +147,40 @@ def hrDashboard(request):
 
 @login_required
 def agentDashBoard(request):  # Test1 Test2
-    # if request.user.profile.emp_desi in agent_list:
-    emp_id = request.user.profile.emp_id
-    emp = Profile.objects.get(emp_id=emp_id)
-    # Leave status
-    leave_hist = LeaveTable.objects.filter(Q(emp_id=emp_id), Q(leave_type__in=['SL', 'PL', 'ML'])).order_by(
-        '-id')[:5]
-    # Month view
-    month_days = []
-    todays_date = date.today()
-    year = todays_date.year
-    month = todays_date.month
-    a, num_days = calendar.monthrange(year, month)
-    start_date = date(year, month, 1)
-    end_date = date(year, month, num_days)
-    delta = timedelta(days=1)
-    while start_date <= end_date:
-        month_days.append(start_date.strftime("%Y-%m-%d"))
-        start_date += delta
-    month_cal = []
-    for i in month_days:
-        dict = {}
-        try:
-            st = AttendanceCalendar.objects.get(Q(date=i), Q(emp_id=emp_id)).att_actual
-        except AttendanceCalendar.DoesNotExist:
-            st = 'Unmarked'
-        dict['dt'] = i
-        dict['st'] = st
-        month_cal.append(dict)
-    data = {'emp': emp, 'leave_hist': leave_hist, 'month_cal': month_cal}
-    return render(request, 'ams/agent-dashboard.html', data)
-    # else:
-    #     return HttpResponse('<H1>You are not Authorised to view this page ! </H1>')
+    if request.user.profile.emp_desi in agent_list:
+        emp_id = request.user.profile.emp_id
+        profile = request.user.profile
+        emp = Profile.objects.get(emp_id=emp_id)
+        # Leave status
+        leave_hist = LeaveTable.objects.filter(Q(profile=profile), Q(leave_type__in=['SL', 'PL', 'ML'])).order_by(
+            '-id')[:5]
+        # Month view
+        month_days = []
+        todays_date = date.today()
+        year = todays_date.year
+        month = todays_date.month
+        a, num_days = calendar.monthrange(year, month)
+        start_date = date(year, month, 1)
+        end_date = date(year, month, num_days)
+        delta = timedelta(days=1)
+        while start_date <= end_date:
+            month_days.append(start_date.strftime("%Y-%m-%d"))
+            start_date += delta
+        month_cal = []
+        for i in month_days:
+            dict = {}
+            try:
+                st = AttendanceCalendar.objects.get(Q(date=i), Q(emp_id=emp_id)).att_actual
+            except AttendanceCalendar.DoesNotExist:
+                st = 'Unmarked'
+            dict['dt'] = i
+            dict['st'] = st
+            month_cal.append(dict)
+        data = {'emp': emp, 'leave_hist': leave_hist, 'month_cal': month_cal}
+        return render(request, 'agent/agent-dashboard.html', data)
+    else:
+        messages.error(request, 'Unauthorized access. You have been Logged Our !')
+        return redirect('')
 
 
 @login_required

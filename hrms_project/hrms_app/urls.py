@@ -6,7 +6,6 @@ urlpatterns = [
     path('', loginPage),
     path('login', loginAndRedirect),
     path('logout', loginPage),
-    path('hr-dashboard', hrDashboard),
     path('start-login', startLogin),
     path('stop-login', stopLogin),
     path('get-emp', getEmp),
@@ -14,6 +13,10 @@ urlpatterns = [
     path('upload-image', uploadImageToDB),
     path('dashboard', DashboardRedirect),
     path('change-password', change_password),
+
+    # Dashboards
+    path('hr-dashboard', hrDashboard),
+    path('agent-dashboard', agentDashBoard),
 
     # User Management
     path('add-new-user', addNewUser),
@@ -31,7 +34,6 @@ urlpatterns = [
     path('assets', assetsAssigning),
     path('edit-asset', assetsEdit),
     path('delete-asset', assetsDelete),
-    path('agent-dashboard', agentDashBoard),
 
     # Attendance
     path('attendance', applyAttendace),
