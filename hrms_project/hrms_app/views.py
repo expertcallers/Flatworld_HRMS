@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from monthdelta import monthdelta
+import calendar
 
 from .models import *
 
@@ -72,20 +73,28 @@ def DashboardRedirect(request):
 @login_required
 def hrDashboard(request):
     profile = request.user.profile
+    # Check in start
+    login = False
+    login_id = None
     try:
-        login = LoginHistory.objects.get(profile=profile, date=date.today())
-        login_id = login.id
-        login = str(login.login)
-        try:
-            login = LoginHistory.objects.get(profile=profile, date=date.today(), done=True)
-            login_id = login.logout - login.login
-            login = True
-        except LoginHistory.DoesNotExist:
-            pass
+        login = LoginHistory.objects.filter(profile=profile, done=False).order_by('id')[:1]
+        if login:
+            for i in login:
+                login_id = i.id
+                login = str(i.login)
+        else:
+            login = False
+            login_id = None
     except LoginHistory.DoesNotExist:
-        login = False
-        login_id = None
-
+        pass
+    try:
+        login = LoginHistory.objects.get(profile=profile, date=date.today(), done=True)
+        login_id = login.logout - login.login
+        login = True
+    except LoginHistory.DoesNotExist:
+        pass
+    # Check in End
+    # Birthday Start
     birthdays = []
     for i in Profile.objects.all():
         day = date.today().day
@@ -95,10 +104,35 @@ def hrDashboard(request):
                 birthdays.append(i)
         except:
             pass
+    # Birthday End
+
 
     new_joins = Profile.objects.all().order_by('-id')[:5]
 
-    data = {'login': login, 'login_id': login_id, 'birthdays': birthdays, 'new_joins': new_joins}
+    # Attendance Month view Start
+    month_days = []
+    todays_date = date.today()
+    year = todays_date.year
+    month = todays_date.month
+    a, num_days = calendar.monthrange(year, month)
+    start_date = date(year, month, 1)
+    end_date = date(year, month, num_days)
+    delta = timedelta(days=1)
+    while start_date <= end_date:
+        month_days.append(start_date.strftime("%Y-%m-%d"))
+        start_date += delta
+    month_cal = []
+    for i in month_days:
+        dict = {}
+        try:
+            st = AttendanceCalendar.objects.get(Q(date=i), Q(emp_id=profile.emp_id)).att_actual
+        except AttendanceCalendar.DoesNotExist:
+            st = 'Unmarked'
+        dict['dt'] = i
+        dict['st'] = st
+        month_cal.append(dict)
+    # Attendance Month view End
+    data = {'login': login, 'login_id': login_id, 'birthdays': birthdays, 'new_joins': new_joins, 'month_cal': month_cal}
     return render(request, 'hr/hr_dashboard.html', data)
 
 

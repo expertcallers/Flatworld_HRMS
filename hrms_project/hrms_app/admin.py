@@ -11,7 +11,7 @@ class ProfileSearch(admin.ModelAdmin):
 
 class LoginHistorySearch(admin.ModelAdmin):
     search_fields = ('profile', 'date')
-    list_display = ('profile', 'date', 'login', 'logout','done')
+    list_display = ('profile', 'id', 'date', 'login', 'logout','done')
     list_filter = ("date",)
 
 class LeaveSearch(admin.ModelAdmin):
