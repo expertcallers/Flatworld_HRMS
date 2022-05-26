@@ -44,7 +44,14 @@
                                             <td>{{i.given_date}}</td>
                                             <td>{{i.return_date}}</td>
                                             <td>{{i.details}}</td>
-                                            <td>{{i.id}}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#edit_{{i.id}}">
+                                                  <i class="fa fa-pencil"> </i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#edit_{{i.id}}">
+                                                  <i class="fa fa-trash"> </i>
+                                                </button>
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                       </tbody>
@@ -121,7 +128,71 @@
   </div>
 </div>
 
+{% for i in assets %}
+<div class="modal fade" id="edit_{{i.id}}" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" >Edit - {{i.id}}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form action="/edit-asset" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="id" value="{{i.id}}">
+          <div class="modal-body">
+              <div class="row mb-5">
+                  <div class="col-md-12">
+                      <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="edit_emp">Employee</label>
+                            <select name="emp" id="edit_emp" class="form-control select2" required>
+                                <option value="" disabled selected> -- Please Select -- </option>
+                                {% for j in profiles %}
+                                <option value="{{j.emp_id}}" {% if i.emp_id == j.emp_id %}selected{% endif %}>{{j.emp_name}} ({{j.emp_id}})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="edit_type">Type of Asset</label>
+                            <select name="type" id="edit_type" class="form-control select2" required>
+                                <option value="" disabled selected> -- Please Select -- </option>
+                                <option value="Computer" {% if i.type == "Computer" %}selected{% endif %}>Computer</option>
+                                <option value="Laptop" {% if i.type == "Laptop" %}selected{% endif %}>Laptop</option>
+                                <option value="Book" {% if i.type == "Book" %}selected{% endif %}>Book</option>
+                                <option value="Mobile" {% if i.type == "Mobile" %}selected{% endif %}>Mobile</option>
+                                <option value="Phone" {% if i.type == "Phone" %}selected{% endif %}>Phone</option>
+                                <option value="Vehicle" {% if i.type == "Vehicle" %}selected{% endif %}>Vehicle</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="edit_given">Given Date</label>
+                            <input type="date" name="given" value="{{i.given_date}}" id="edit_given" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="edit_return">Return Date</label>
+                            <input type="date" name="return" value="{{i.return_date}}" id="edit_return" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="edit_details">Asset details</label>
+                            <textarea id="edit_details" name="details" class="form-control">{{i.details}}</textarea>
+                        </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
 {% endblock %}
+
 {% block script %}
 <script>
   $('#datatablex').DataTable( {

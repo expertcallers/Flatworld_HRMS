@@ -1,0 +1,168 @@
+{% extends 'agent/base.html' %}
+{% block main %}
+{% load static %}
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+          <div class="row welcometop pb-3">
+            <div class="col-md-6">
+              <div class="welcome">
+                <p>Welcome</p>
+                <h3>{{emp.emp_name}} <span></span></h3>
+              </div>
+
+              <div class="row mt-3">
+                <div class="col-md-12">
+                  <div class="card">
+                    <div class="card-header">
+                      <h2>Month Calendar</h2>
+                    </div>
+                    <div class="card-body">
+                      <div class="monthly" id="mycalendar"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="card">
+                    <div class="card-header">
+                      <h2>RM1</h2>
+                    </div>      
+                    <div class="card-body">
+                      <h5>{{emp.emp_rm1}}</h5>
+                    </div>              
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card">
+                    <div class="card-header">
+                      <h2>RM2</h2>
+                    </div>      
+                    <div class="card-body">
+                      <h5>{{emp.emp_rm2}}</h5>
+                    </div>              
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card">
+                    <div class="card-header">
+                      <h2>RM3</h2>
+                    </div>      
+                    <div class="card-body">
+                      <h5>{{emp.emp_rm3}}</h5>
+                    </div>              
+                  </div>
+                </div>
+              </div>
+              <div class="row mt-3">
+                <div class="col-md-12">
+                  <div class="card">
+                    <div class="card-header">
+                      <h2>Attendance Report</h2>
+                    </div>
+                    <div class="card-body">
+                      <form action="/view-emp-attendance" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input value="self" type="hidden" name="emp_id">
+                        <div class="col-md-6 form-group">
+                          <label for="start_date">Start Date</label>
+                          <input type="date" id="start_date" min="2022-04-01" onchange="mydate(this);" name="start_date" required class="form-control" value="" />
+                        </div>
+                        <div class="col-md-6 form-group">
+                          <label for="end_date">End Date</label>
+                          <input type="date" id="end_date" onchange="mydate(this);" name="end_date" required class="form-control" value="" />
+                        </div>
+                        <div class="col-md-12 form-group">
+                          <button class="form-control btn btn-primary">Submit</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row mt-3">
+                <div class="col-md-12">
+                  <div class="card">
+                    <div class="card-header">
+                      <h2>Leave Status</h2>
+                    </div>
+                    <div class="card-body">
+                      <table class="table table-striped">
+                        <thead class="thead-dark">
+                          <tr>
+                            <th>Leave Dates</th>
+                            <th>TL Status</th>
+                            <th>Manager Status</th>
+                            <th>Final Status</th>
+                            <th>Agent Comments</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for c in leave_hist %}
+                          <tr>
+                            <td>{{c.start_date}} - {{c.end_date}}</td>
+                            <td>{% if c.tl_status %}{{c.tl_status}}{% else %}Pending{% endif %}</td>
+                            <td>
+                              {% if c.manager_status %}
+                                {{c.manager_status}}
+                              {% elif c.tl_status == "Rejected" %}
+                                Rejected by RM1
+                              {% else %}
+                                Pending
+                              {% endif %}
+                            </td>
+                            <td>
+                                {% if c.status %}
+                                <p>{{c.status}}</p>
+                                {% else %}
+                                <p>Pending</p>
+                                {% endif %}
+                            </td>
+                            <td>{{c.agent_reason}}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+
+
+        </div>
+        <!-- /page content -->
+
+        <!-- footer content -->
+        <footer>
+          <div class="text-center">
+            ECPL CC Team
+          </div>
+          <div class="clearfix"></div>
+        </footer>
+        <!-- /footer content -->
+      </div>
+    </div>
+{% endblock %}
+{% block script %}
+    <script type="text/javascript">
+      $today = new Date();
+      $today = moment($today).format('YYYY-MM-DD');
+      $('#end_date').attr("max", $today);
+      $('#start_date').attr("max", $today);
+      function mydate(e) {
+        $start = $('#start_date').val();
+        $end = $('#end_date');
+        $end.attr("min", $start);
+      }
+    </script>
+{% endblock %}
+

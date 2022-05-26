@@ -29,6 +29,8 @@ urlpatterns = [
 
     # Assets
     path('assets', assetsAssigning),
+    path('edit-asset', assetsEdit),
+    path('agent-dashboard', agentDashBoard),
 
     # Attendance
     path('attendance', applyAttendace),
