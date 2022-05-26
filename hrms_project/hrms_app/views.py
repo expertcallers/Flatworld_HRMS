@@ -355,25 +355,29 @@ def assetsEdit(request):
     user = request.user.profile
     if request.method == 'POST':
         id = request.POST['id']
-        type = request.POST['type']
         given = request.POST['given']
         return_date = request.POST.get('return')
         details = request.POST['details']
         e = AssetsDetails.objects.get(id=id)
-        e.type = type
         e.given_date = given
         e.return_date = return_date
         e.details = details
         e.save()
-
         return redirect('/assets')
     else:
-        profiles = Profile.objects.all()
-        assets = AssetsDetails.objects.all()
-        data = {'profiles': profiles, 'assets': assets}
-        return render(request, 'hr/assets.html', data)
-
-
+        messages.info(request, "Invalid Request. you have been logged out!")
+        return redirect('/')
+@login_required
+def assetsDelete(request):
+    if request.method == 'POST':
+        id = request.POST['id']
+        e = AssetsDetails.objects.get(id=id)
+        e.delete()
+        messages.info(request, 'Successfully Deleted! ')
+        return redirect('/assets')
+    else:
+        messages.info(request, "Invalid Request. you have been logged out!")
+        return redirect('/')
 
 @login_required
 def applyAttendace(request):  # Test1

@@ -45,12 +45,18 @@
                                             <td>{{i.return_date}}</td>
                                             <td>{{i.details}}</td>
                                             <td>
-                                                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#edit_{{i.id}}">
-                                                  <i class="fa fa-pencil"> </i>
-                                                </button>
-                                                <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#edit_{{i.id}}">
-                                                  <i class="fa fa-trash"> </i>
-                                                </button>
+                                                <div style="display: inline-flex;">
+                                                    <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#edit_{{i.id}}">
+                                                      <i class="fa fa-pencil"> </i>
+                                                    </button>
+                                                    <form action="/delete-asset" method="POST" enctype="multipart/form-data">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="id" value="{{i.id}}">
+                                                        <button type="submit" onclick="return confirmm();" class="btn btn-sm btn-danger">
+                                                          <i class="fa fa-trash"> </i>
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -147,16 +153,16 @@
                       <div class="row">
                         <div class="col-md-6 form-group">
                             <label for="edit_emp">Employee</label>
-                            <select name="emp" id="edit_emp" class="form-control select2" required>
+                            <select name="emp" id="edit_emp" class="form-control select2" disabled>
                                 <option value="" disabled selected> -- Please Select -- </option>
                                 {% for j in profiles %}
-                                <option value="{{j.emp_id}}" {% if i.emp_id == j.emp_id %}selected{% endif %}>{{j.emp_name}} ({{j.emp_id}})</option>
+                                <option value="{{j.emp_id}}" {% if i.profile.emp_id == j.emp_id %}selected{% endif %}>{{j.emp_name}} ({{j.emp_id}})</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6 form-group">
-                            <label for="edit_type">Type of Asset</label>
-                            <select name="type" id="edit_type" class="form-control select2" required>
+                            <label for="edit_type_{{i.id}}">Type of Asset</label>
+                            <select name="type" id="edit_type_{{i.id}}" class="form-control select2" disabled>
                                 <option value="" disabled selected> -- Please Select -- </option>
                                 <option value="Computer" {% if i.type == "Computer" %}selected{% endif %}>Computer</option>
                                 <option value="Laptop" {% if i.type == "Laptop" %}selected{% endif %}>Laptop</option>
@@ -167,12 +173,14 @@
                             </select>
                         </div>
                         <div class="col-md-6 form-group">
-                            <label for="edit_given">Given Date</label>
-                            <input type="date" name="given" value="{{i.given_date}}" id="edit_given" class="form-control" required>
+                            <label for="edit_given_{{i.id}}">Given Date</label>
+                            <input type="date" name="given" value="{{i.given_date}}" id="edit_given_{{i.id}}_get" class="form-control" required>
+                            <input type="hidden" value="{{i.given_date}}" id="edit_given_{{i.id}}">
                         </div>
                         <div class="col-md-6 form-group">
-                            <label for="edit_return">Return Date</label>
-                            <input type="date" name="return" value="{{i.return_date}}" id="edit_return" class="form-control">
+                            <label for="edit_return_{{i.id}}">Return Date</label>
+                            <input type="hidden" value="{{i.return_date}}" id="edit_return_{{i.id}}">
+                            <input type="date" name="return" value="{{i.return_date}}" id="edit_return_{{i.id}}_get" class="form-control">
                         </div>
                         <div class="col-md-6 form-group">
                             <label for="edit_details">Asset details</label>
@@ -198,5 +206,12 @@
   $('#datatablex').DataTable( {
       responsive: true
   } );
+
+{% for i in assets %}
+    $given = document.getElementById("edit_given_{{i.id}}").value
+    $('#edit_given_{{i.id}}_get').val(moment($given).format('YYYY-MM-DD'));
+    $return = document.getElementById("edit_return_{{i.id}}").value
+    $('#edit_return_{{i.id}}_get').val(moment($return).format('YYYY-MM-DD'));
+{% endfor %}
 </script>
 {% endblock %}

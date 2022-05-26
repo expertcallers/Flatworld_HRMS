@@ -30,6 +30,7 @@ urlpatterns = [
     # Assets
     path('assets', assetsAssigning),
     path('edit-asset', assetsEdit),
+    path('delete-asset', assetsDelete),
     path('agent-dashboard', agentDashBoard),
 
     # Attendance
