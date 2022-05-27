@@ -32,15 +32,13 @@ urlpatterns = [
     path('departments', viewTeam),
     path('view-all-employees-oms/<str:name>', viewallOMS),
 
-    # Leave
-    path('ams-apply_leave', applyLeave),
-    path('view-leave-escalation-mgr', viewEscalation),
 
     # Leave Management
     path('ams-apply_leave', applyLeave),
-    path('view-initial-leave-request', initialLeaveRequest),
     path('approve-leave-rm1', approveLeaveRM1),
+    path('view-initial-leave-request', initialLeaveRequest),
     path('view-final-leave-request', finalLeaveRequest),
+    path('view-leave-escalation-mgr', viewEscalation),
     path('sl-proof', SLProofSubmit),
     path('apply-escalation', applyEscalation),
     path('leave-history', viewLeaveHistory),

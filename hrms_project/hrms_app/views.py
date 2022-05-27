@@ -685,6 +685,95 @@ def viewEscalation(request):  # Test1
 
 
 @login_required
+def viewAndApproveLeaveRequestMgr(request):  # Test1
+    if request.method == 'POST':
+        id = request.POST["id"]
+        e = LeaveTable.objects.get(id=id)
+        emp_id = e.profile.emp_id
+        team = e.emp_process
+        att_actual = e.leave_type
+        leave_type = e.leave_type
+        no_days = e.no_days
+        rm1 = e.emp_rm1
+        rm2 = e.emp_rm2
+        rm3 = e.emp_rm3
+        emp_desi = e.emp_desi
+        emp_name = e.emp_name
+        now = datetime.now()
+        start_date = e.start_date
+        end_date = e.end_date
+        om_response = request.POST['tl_response']
+        om_reason = request.POST['tl_reason']
+        if om_response == 'Approve':
+            manager_approval = True
+            manager_status = 'Approved'
+            status = 'Approved'
+            month_days = []
+            start_date = start_date
+            end_date = end_date
+            delta = timedelta(days=1)
+            while start_date <= end_date:
+                month_days.append(start_date.strftime("%Y-%m-%d"))
+                start_date += delta
+            for i in month_days:
+                try:
+                    cal = EcplCalander.objects.get(Q(date=i), Q(emp_id=emp_id))
+                    cal.att_actual = att_actual
+                    cal.appoved_by = request.user.profile.emp_name
+                    cal.approved_on = now
+                    cal.save()
+                except EcplCalander.DoesNotExist:
+                    cal = EcplCalander.objects.create(
+                        team=team, date=i, emp_id=emp_id,
+                        att_actual=att_actual,
+                        rm1=rm1, rm2=rm2, rm3=rm3,
+                        rm1_id=e.emp_rm1_id, rm2_id=e.emp_rm2_id, rm3_id=e.emp_rm3_id,
+                        approved_on=now, emp_desi=emp_desi, appoved_by=request.user.profile.emp_name,
+                        emp_name=emp_name
+                    )
+                    cal.save()
+
+        else:
+            manager_approval = True
+            manager_status = 'Rejected'
+            status = 'Rejected'
+            leave_balance = EmployeeLeaveBalance.objects.get(emp_id=emp_id)
+            if leave_type == 'PL':
+                leave_balance.pl_balance += int(no_days)
+                leave_balance.save()
+            elif leave_type == 'SL':
+                leave_balance.sl_balance += int(no_days)
+                leave_balance.save()
+
+            leave_history = leaveHistory()
+            leave_history.leave_type = leave_type
+            leave_history.transaction = 'Leave Refund as RM3 Rejected, Leave applied on: ' + str(
+                e.applied_date) + ' (ID: ' + str(e.id) + ')'
+            leave_history.date = date.today()
+            leave_history.no_days = int(no_days)
+            leave_history.profile = e.profile
+            pl = EmployeeLeaveBalance.objects.get(profile=e.profile).pl_balance
+            sl = EmployeeLeaveBalance.objects.get(profile=e.profile).sl_balance
+            leave_history.total = pl + sl
+            leave_history.save()
+
+        e.manager_approval = manager_approval
+        e.manager_reason = om_reason
+        e.manager_status = manager_status
+        e.status = status
+        e.save()
+        return redirect('/ams/tl-dashboard')
+    else:
+
+        emp_id = request.user.profile.emp_id
+        emp = Profile.objects.get(emp_id=emp_id)
+        leave_request = LeaveTable.objects.filter(Q(emp_rm3_id=emp_id), Q(tl_status='Approved'),
+                                                  Q(manager_approval=False))
+        data = {'emp': emp, 'leave_request': leave_request}
+        return render(request, 'ams/leave_approval_rm3.html', data)
+
+
+@login_required
 def viewLeaveHistory(request):  # Test1
     emp_id = request.user.profile.emp_id
     leave = Profile.objects.filter(Q(emp_rm1_id=emp_id) | Q(emp_rm2_id=emp_id) | Q(emp_rm3_id=emp_id))
