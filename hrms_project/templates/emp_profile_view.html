@@ -542,6 +542,80 @@
                     </div>
                   </div>
                 {% endif %}
+                {% if request.user.profile.emp_desi in hr_list %}
+                  <form action="/change-mapping" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="id" value="{{profile.id}}">
+                    <div class="row mt-4">
+                      <div class="col-md-12">
+                        <h4>Official Details</h4>
+                        <!-- <p>Person to be contacted in case of emergency.</p> -->
+                        <hr>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="hr_emp_name">Employee Name</label>
+                          <input type="text" value="{{profile.emp_name}}" disabled name="emp_name" id="hr_emp_name" class="form-control">
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="hr_emp_id">Employee ID</label>
+                          <input type="text" value="{{profile.emp_id}}" disabled name="emp_id" id="hr_emp_id" class="form-control">
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="hr_emp_desg">Employee Designation</label>
+                        <input type="text" value="{{profile.emp_desi}}" readonly id="hr_emp_desg" class="form-control">
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="hr_emp_pro">Employee Department</label>
+                          <select name="emp_department" id="hr_emp_pro" class="form-control select2">
+                            {% for i in departments %}
+                            <option value="{{i.id}}" {% if profile.emp_department == i.name %}selected{% endif %}>{{i.name}}</option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="hr_emp_rm1">RM1</label>
+                          <select name="rm1" id="hr_emp_rm1" class="form-control select2">
+                            {% for i in rms %}
+                            <option value="{{i.id}}" {% if profile.emp_rm1_id == i.emp_id %}selected{% endif %}>{{i.emp_name}} ({{i.emp_id}})</option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="hr_emp_rm2">RM2</label>
+                          <select name="rm2" id="hr_emp_rm2" class="form-control select2">
+                            {% for i in rms %}
+                            <option value="{{i.id}}" {% if profile.emp_rm2_id == i.emp_id %}selected{% endif %}>{{i.emp_name}} ({{i.emp_id}})</option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="hr_emp_rm3">RM3</label>
+                          <select name="rm3" id="hr_emp_rm3" class="form-control select2">
+                            {% for i in rms %}
+                            <option value="{{i.id}}" {% if profile.emp_rm3_id == i.emp_id %}selected{% endif %}>{{i.emp_name}} ({{i.emp_id}})</option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-md-12" align="center">
+                        <button class="btn btn-success" onclick="return confirmm();">Change Mapping</button>
+                      </div>
+                    </div>
+                  </form>
+                {% else %}
                   <div class="row mt-4">
                     <div class="col-md-12">
                       <h4>Official Details</h4>
@@ -591,6 +665,7 @@
                       </div>
                     </div>
                   </div>
+                {% endif %}
                 {% if request.user.profile.emp_desi in hr_list %}
                   <div class="row mt-4">
                     <div class="col-md-12">
@@ -618,26 +693,26 @@
                       </div>
                     </div>
                     <div class="col-md-9">
-                      <form action="/ams/edit-employee-profile-status" method="POST" enctype="multipart/form-data">
+                      <form action="/edit-employee-profile-status" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="col-md-4">
                           <div class="form-group">
                             <label for="new_status">New Status</label>
                             <select class="form-control select2" name="new_status" id="new_status" required>
                               <option value="" selected disabled>Please Select</option>
-                              <option value="Attrition">Attrition</option>
-                              <option value="Active">Active</option>
-                              <option value="Bench">Bench</option>
+                              <option value="Attrition" {% if profile.agent_status == "Attrition" %}disabled{% endif %}>Attrition</option>
+                              <option value="Active" {% if profile.agent_status == "Active" %}disabled{% endif %}>Active</option>
+                              <option value="Bench" {% if profile.agent_status == "Bench" %}disabled{% endif %}>Bench</option>
                             </select>
                             <input type="hidden" value="{{profile.id}}" name="id" id="">
                           </div>
                         </div>
-                        <div class="col-md-4">
-                          <div class="form-group">
-                            <label for="reason">Reason</label>
-                            <textarea id="reason" class="form-control" rows="3" name="reason" required></textarea>
-                          </div>
-                        </div>
+<!--                        <div class="col-md-4">-->
+<!--                          <div class="form-group">-->
+<!--                            <label for="reason">Reason</label>-->
+<!--                            <textarea id="reason" class="form-control" rows="3" name="reason" required></textarea>-->
+<!--                          </div>-->
+<!--                        </div>-->
                         <div class="col-md-4">
                           <div class="form-group">
                             <button class="form-control btn btn-primary mt-4">submit</button>

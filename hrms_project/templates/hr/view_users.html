@@ -42,23 +42,21 @@
                       </tfoot>
                       <tbody>
                       {% for i in add %}
-                              <tr>
-                                  <td>{{i.emp_name}}</td>
-                                  <td>{{i.emp_id}}</td>
-                                  <td>{{i.emp_desi}}</td>
-                                  <td>{{i.emp_rm1}}</td>
-                                  <td>{{i.emp_rm2}}</td>
-                                  <td>{{i.emp_rm3}}</td>
-                                  <td>{{i.emp_department}}</td>
-                                  <td>{{i.agent_status}}</td>
-                                  <td>
-                                  <a href="/view-employee-profile/{{i.id}}/{{i.on_id}}">
-                                    <button type="submit" class="btn-primary btn btn-sm">view</button>
-                                  </a>
-
-                                </td>
-
-                              </tr>
+                          <tr>
+                              <td>{{i.emp_name}}</td>
+                              <td>{{i.emp_id}}</td>
+                              <td>{{i.emp_desi}}</td>
+                              <td>{{i.emp_rm1}}</td>
+                              <td>{{i.emp_rm2}}</td>
+                              <td>{{i.emp_rm3}}</td>
+                              <td>{{i.emp_department}}</td>
+                              <td>{{i.agent_status}}</td>
+                              <td>
+                              <a href="/view-employee-profile/{{i.id}}/{{i.on_id}}">
+                                <button type="submit" class="btn-primary btn btn-sm">view / edit</button>
+                              </a>
+                            </td>
+                          </tr>
                       {% endfor %}
                           </tbody>
                       </table>

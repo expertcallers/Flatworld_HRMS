@@ -24,6 +24,8 @@ urlpatterns = [
     path('add-new-designation', addNewDesi),
     path('viewusers', viewUsersHR),
     path('view-employee-profile/<int:id>/<str:on_id>', viewEmployeeProfile),
+    path('change-mapping', changeMapping),
+    path('edit-employee-profile-status', editAgentStatus),
 
     # Team Management
     path('add-newteam', addNewTeam),

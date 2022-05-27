@@ -1,16 +1,17 @@
+import calendar
 import csv
 import json
 import os
-from datetime import date, timedelta, datetime
+from datetime import timedelta, datetime
+
+from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.db.models import Sum, Q
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
-from django.contrib import messages
 from monthdelta import monthdelta
-import calendar
 
 from .models import *
 
@@ -25,6 +26,7 @@ def loginPage(request):  # Test1 Test2
     form = AuthenticationForm()
     data = {'form': form}
     return render(request, 'login.html', data)
+
 
 def loginAndRedirect(request):
     if request.method == 'POST':
@@ -77,7 +79,7 @@ def DashboardRedirect(request):
     elif emp_desi in manager_list:
         return redirect("/manager-dashboard")
     else:
-        messages.info(request,'Invalid Request.')
+        messages.info(request, 'Invalid Request.')
         return redirect("/")
 
 
@@ -100,7 +102,7 @@ def hrDashboard(request):
         pass
     try:
         login = LoginHistory.objects.get(profile=profile, date=date.today(), done=True)
-        login_id = datetime.strptime(str(login.logout - login.login),"%H:%M:%S.%f")
+        login_id = datetime.strptime(str(login.logout - login.login), "%H:%M:%S.%f")
         login_id = (login_id).strftime("%H:%M:%S")
         login = True
     except LoginHistory.DoesNotExist:
@@ -117,7 +119,6 @@ def hrDashboard(request):
         except:
             pass
     # Birthday End
-
 
     new_joins = Profile.objects.all().order_by('-id')[:5]
 
@@ -146,7 +147,8 @@ def hrDashboard(request):
     # Attendance Month view End
 
     teams = Departments.objects.all()
-    data = {'login': login, 'team':teams, 'login_id': login_id, 'birthdays': birthdays, 'new_joins': new_joins, 'month_cal': month_cal}
+    data = {'login': login, 'team': teams, 'login_id': login_id, 'birthdays': birthdays, 'new_joins': new_joins,
+            'month_cal': month_cal}
     return render(request, 'hr/hr_dashboard.html', data)
 
 
@@ -211,7 +213,6 @@ def agentDashBoard(request):  # Test1 Test2
         return redirect('')
 
 
-
 @login_required
 def managerDashboard(request):  # Test1 Test2
     profile = request.user.profile
@@ -247,11 +248,14 @@ def managerDashboard(request):  # Test1 Test2
     myprof = Profile.objects.filter(Q(emp_rm3_id=emp_id))
     for i in myprof:
         profilelist.append(i)
-    ini_req_count = LeaveTable.objects.filter(profile__in=profilelist, tl_approval=False, manager_approval=False).count()
+    ini_req_count = LeaveTable.objects.filter(profile__in=profilelist, tl_approval=False,
+                                              manager_approval=False).count()
 
-    final_req_count = LeaveTable.objects.filter(profile__in=profilelist, tl_approval=True, manager_approval=False).count()
+    final_req_count = LeaveTable.objects.filter(profile__in=profilelist, tl_approval=True,
+                                                manager_approval=False).count()
     # Leave Escalation Count
-    leave_esc_count = LeaveTable.objects.filter(profile__in=profilelist, manager_approval=False, escalation=True).count()
+    leave_esc_count = LeaveTable.objects.filter(profile__in=profilelist, manager_approval=False,
+                                                escalation=True).count()
 
     # Month view
     month_days = []
@@ -277,12 +281,14 @@ def managerDashboard(request):  # Test1 Test2
         month_cal.append(dict)
 
     # All Employees
-    all_emps = Profile.objects.filter(Q(agent_status='Active'),Q(emp_rm1_id=emp_id) | Q(emp_rm2_id=emp_id) | Q(emp_rm3_id=emp_id))
+    all_emps = Profile.objects.filter(Q(agent_status='Active'),
+                                      Q(emp_rm1_id=emp_id) | Q(emp_rm2_id=emp_id) | Q(emp_rm3_id=emp_id))
     all_emps_under = []
     for i in all_emps:
         if i not in all_emps_under:
             all_emps_under.append(i)
-            under = Profile.objects.filter(Q(agent_status='Active'),Q(emp_rm1_id=i.emp_id) | Q(emp_rm2_id=i.emp_id) | Q(emp_rm3_id=i.emp_id))
+            under = Profile.objects.filter(Q(agent_status='Active'),
+                                           Q(emp_rm1_id=i.emp_id) | Q(emp_rm2_id=i.emp_id) | Q(emp_rm3_id=i.emp_id))
             for j in under:
                 if j not in all_emps_under:
                     all_emps_under.append(j)
@@ -312,12 +318,11 @@ def managerDashboard(request):  # Test1 Test2
     reimbursement = ReimbursementTickets.objects.filter(profile__in=profiles, respond=False).count()
 
     data = {'emp': emp, 'count_all_emps': count_all_emps, 'all_tls': all_tls_under, 'all_tls_count': all_tls_count,
-            'all_ams': all_ams_under, 'all_ams_count': all_ams_count, 'final_req_count':final_req_count,
+            'all_ams': all_ams_under, 'all_ams_count': all_ams_count, 'final_req_count': final_req_count,
             'ini_req_count': ini_req_count, 'leave_esc_count': leave_esc_count, 'all_emp': all_emps_under,
-            'month_cal': month_cal, 'login': login, 'login_id': login_id, 'reimbursement':reimbursement
+            'month_cal': month_cal, 'login': login, 'login_id': login_id, 'reimbursement': reimbursement
             }
     return render(request, 'manager/manager-dashboard.html', data)
-
 
 
 @login_required
@@ -491,12 +496,13 @@ def approveLeaveRM1(request):  # Test1
                 leave_balance.save()
             leave_history = leaveHistory()
             leave_history.leave_type = leave_type
-            leave_history.transaction = 'Leave Refund as RM1 Rejected, Leave applied on: '+str(e.applied_date)+' (ID: '+str(e.id)+')'
+            leave_history.transaction = 'Leave Refund as RM1 Rejected, Leave applied on: ' + str(
+                e.applied_date) + ' (ID: ' + str(e.id) + ')'
             leave_history.date = date.today()
             leave_history.no_days = int(no_days)
             leave_history.emp_id = emp_id
-            pl = EmployeeLeaveBalance.objects.get(emp_id=emp_id).pl_balance
-            sl = EmployeeLeaveBalance.objects.get(emp_id=emp_id).sl_balance
+            pl = EmployeeLeaveBalance.objects.get(profile=profile).pl_balance
+            sl = EmployeeLeaveBalance.objects.get(profile=profile).sl_balance
             leave_history.total = pl + sl
             leave_history.save()
         e.tl_approval = tl_approval
@@ -563,65 +569,11 @@ def finalLeaveRequest(request):  # Test1
                         team=team, date=i, emp_id=emp_id,
                         att_actual=att_actual,
                         rm1=rm1, rm2=rm2, rm3=rm3,
-                        rm1_id=e.emp_rm1_id, rm2_id=e.emp_rm2_id, rm3_id=e.emp_rm3_id,
+                        rm1_id=e.profile.emp_rm1_id, rm2_id=e.profile.emp_rm2_id, rm3_id=e.profile.emp_rm3_id,
                         approved_on=now, emp_desi=emp_desi, appoved_by=request.user.profile.emp_name,
                         emp_name=emp_name
                     )
                     cal.save()
-
-            # sandwich policy calculation
-
-            # week_off = []
-            # last = ''
-            # if leave_type == 'SL':
-            #     start_date = e.start_date
-            #     sand_start_date = start_date - timedelta(days=1)
-            #     cal = EcplCalander.objects.get(Q(date=sand_start_date), Q(emp_id=emp_id)).att_actual
-            #     if cal == "Week OFF" or cal == "SL" or cal == "PL":
-            #         week_off.append(sand_start_date)
-            #         sand_start_date -= timedelta(days=1)
-            #         sand_end_date = start_date - timedelta(days=15)
-            #         while sand_start_date > sand_end_date:
-            #             cal = EcplCalander.objects.get(Q(date=sand_start_date), Q(emp_id=emp_id)).att_actual
-            #             if cal == "Week OFF":
-            #                 week_off.append(sand_start_date)
-            #             elif cal == 'SL' or cal == 'PL':
-            #                 last = sand_start_date
-            #                 break
-            #             else:
-            #                 break
-            #             sand_start_date -= timedelta(days=1)
-
-            # elif leave_type == 'PL':
-            #     start_date = e.start_date
-            #     sand_start_date = start_date - timedelta(days=1)
-            #     try:
-            #         cal = EcplCalander.objects.get(Q(date=sand_start_date), Q(emp_id=emp_id)).att_actual
-            #         if cal == "Week OFF" or cal == "PL" or cal == "SL":
-            #             week_off.append(sand_start_date)
-            #             sand_start_date -= timedelta(days=1)
-            #             sand_end_date = start_date - timedelta(days=15)
-            #             while sand_start_date > sand_end_date:
-            #                 cal = EcplCalander.objects.get(Q(date=sand_start_date), Q(emp_id=emp_id)).att_actual
-            #                 if cal == "Week OFF":
-            #                     week_off.append(sand_start_date)
-            #                 elif cal == 'SL' or cal == 'PL':
-            #                     last = sand_start_date
-            #                     break
-            #                 else:
-            #                     break
-            #                 sand_start_date -= timedelta(days=1)
-            #     except:
-            #         pass
-            # if last != '':
-            #     cal_list = []
-            #     last += timedelta(days=1)
-            #     while start_date > last:
-            #         start_date -= timedelta(days=1)
-            #         cal = EcplCalander.objects.get(Q(date=start_date), Q(emp_id=emp_id))
-            #         cal.att_actual = "Absent (Sandwich)"
-            #         cal_list.append(cal)
-            #     EcplCalander.objects.bulk_update(cal_list,['att_actual'])
 
         else:
             manager_approval = True
@@ -682,6 +634,7 @@ def SLProofSubmit(request):  # Test1
             messages.info(request, "The time has exceeded cannot upload now :)")
             return redirect('/ams-apply_leave')
 
+
 @login_required
 def applyEscalation(request):  # Test1
     if request.method == "POST":
@@ -703,7 +656,8 @@ def applyEscalation(request):  # Test1
 
         leave_history = leaveHistory()
         leave_history.leave_type = e.leave_type
-        leave_history.transaction = 'Applied for Escalation, Leave applied on: ' + str(e.applied_date)+' (ID: '+str(e.id)+')'
+        leave_history.transaction = 'Applied for Escalation, Leave applied on: ' + str(e.applied_date) + ' (ID: ' + str(
+            e.id) + ')'
         leave_history.date = date.today()
         leave_history.no_days = int(no_days)
         leave_history.emp_id = emp_id
@@ -747,6 +701,7 @@ def viewLeaveHistory(request):  # Test1
     data = {'leave': leave_lst}
     return render(request, 'view_employee_leave_history.html', data)
 
+
 @login_required
 def assetsAssigning(request):
     user = request.user.profile
@@ -777,7 +732,6 @@ def assetsAssigning(request):
         return render(request, 'hr/assets.html', data)
 
 
-
 @login_required
 def assetsEdit(request):
     user = request.user.profile
@@ -788,13 +742,16 @@ def assetsEdit(request):
         details = request.POST['details']
         e = AssetsDetails.objects.get(id=id)
         e.given_date = given
-        e.return_date = return_date
+        if return_date:
+            e.return_date = return_date
         e.details = details
         e.save()
         return redirect('/assets')
     else:
         messages.info(request, "Invalid Request. you have been logged out!")
         return redirect('/')
+
+
 @login_required
 def assetsDelete(request):
     if request.method == 'POST':
@@ -806,6 +763,7 @@ def assetsDelete(request):
     else:
         messages.info(request, "Invalid Request. you have been logged out!")
         return redirect('/')
+
 
 @login_required
 def applyAttendace(request):  # Test1
@@ -891,7 +849,8 @@ def viewTeamAttendance(request):  # Test1
                 for i in all_emp:
                     if i.emp_id not in emp_id_lst:
                         emp_id_lst.append(i.emp_id)
-                        under = Profile.objects.filter(Q(emp_rm1_id=i.emp_id) | Q(emp_rm2_id=i.emp_id) | Q(emp_rm3_id=i.emp_id))
+                        under = Profile.objects.filter(
+                            Q(emp_rm1_id=i.emp_id) | Q(emp_rm2_id=i.emp_id) | Q(emp_rm3_id=i.emp_id))
                         for j in under:
                             if j.emp_id not in emp_id_lst:
                                 emp_id_lst.append(j.emp_id)
@@ -901,9 +860,10 @@ def viewTeamAttendance(request):  # Test1
                 response = HttpResponse(content_type='text/csv')
                 response['Content-Disposition'] = 'attachment; filename="attendance_report.csv"'
                 writer = csv.writer(response)
-                writer.writerow(['Date', 'Emp ID', 'Emp Name', 'Attendance', 'Designation', 'RM 1', 'RM 2', 'RM 3', 'Team'])
+                writer.writerow(
+                    ['Date', 'Emp ID', 'Emp Name', 'Attendance', 'Designation', 'RM 1', 'RM 2', 'RM 3', 'Team'])
                 calanders = AttendanceCalendar.objects.filter(
-                    emp_id__in=emp_id_lst,date__range=[start_date, end_date]).values_list(
+                    emp_id__in=emp_id_lst, date__range=[start_date, end_date]).values_list(
                     'date', 'emp_id', 'emp_name', 'att_actual', 'emp_desi', 'rm1', 'rm2', 'rm3', 'team')
                 for c in calanders:
                     writer.writerow(c)
@@ -915,9 +875,10 @@ def viewTeamAttendance(request):  # Test1
                 response = HttpResponse(content_type='text/csv')
                 response['Content-Disposition'] = 'attachment; filename="attendance_report.csv"'
                 writer = csv.writer(response)
-                writer.writerow(['Date', 'Emp ID', 'Emp Name', 'Attendance', 'Designation', 'RM 1', 'RM 2', 'RM 3', 'Team'])
+                writer.writerow(
+                    ['Date', 'Emp ID', 'Emp Name', 'Attendance', 'Designation', 'RM 1', 'RM 2', 'RM 3', 'Team'])
                 calanders = AttendanceCalendar.objects.filter(
-                    Q(rm1_id=rm) | Q(rm2_id=rm) | Q(rm3_id=rm),date__range=[start_date, end_date]).values_list(
+                    Q(rm1_id=rm) | Q(rm2_id=rm) | Q(rm3_id=rm), date__range=[start_date, end_date]).values_list(
                     'date', 'emp_id', 'emp_name', 'att_actual', 'emp_desi', 'rm1', 'rm2', 'rm3', 'team')
                 for c in calanders:
                     writer.writerow(c)
@@ -935,12 +896,12 @@ def viewTeamAttendance(request):  # Test1
         return redirect('/dashboard')
 
 
-
 @login_required
 def weekAttendanceReport(request):  # Test1
     def Merge(a, b, c, d, e, f, g):
-        res = {**a,**b,**c,**d,**e,**f,**g}
+        res = {**a, **b, **c, **d, **e, **f, **g}
         return res
+
     empobj = Profile.objects.get(emp_id=request.user.profile.emp_id)
     emp_id = request.user.profile.emp_id
     day = date.today()
@@ -980,7 +941,7 @@ def weekAttendanceReport(request):  # Test1
     new_lst = []
     sort = sorted(lst, key=lambda x: x['emp_id'])
 
-    for i in range(0,len(emp_id_list)):
+    for i in range(0, len(emp_id_list)):
         individual = Merge(sort[n], sort[n + 1], sort[n + 2], sort[n + 3], sort[n + 4], sort[n + 5], sort[n + 6])
         j = 0
         for w in weekdays:
@@ -989,7 +950,7 @@ def weekAttendanceReport(request):  # Test1
             del individual[w]
             j += 1
         new_lst.append(individual)
-        n+=7
+        n += 7
 
     data = {"cal": new_lst, 'emp': empobj}
     return render(request, 'week_attendace_report.html', data)
@@ -1021,13 +982,15 @@ def teamAttendanceReport(request):  # Test 1
             response['Content-Disposition'] = 'attachment; filename="attendance_report.csv"'
             writer = csv.writer(response)
             writer.writerow(['Date', 'Emp ID', 'Emp Name', 'Attendance', 'Designation', 'RM 1', 'RM 2', 'RM 3', 'Team'])
-            calanders = AttendanceCalendar.objects.filter(team=team_name,date__range=[start_date, end_date]).values_list(
+            calanders = AttendanceCalendar.objects.filter(team=team_name,
+                                                          date__range=[start_date, end_date]).values_list(
                 'date', 'emp_id', 'emp_name', 'att_actual', 'emp_desi', 'rm1', 'rm2', 'rm3', 'team')
             for c in calanders:
                 writer.writerow(c)
             return response
     else:
         return HttpResponse('<h2>*** GET not available ***</h2>')
+
 
 @login_required
 def Settings(request):  # Test1
@@ -1146,6 +1109,7 @@ def addNewDesi(request):
         messages.error(request, "Invalid request! you have been logged out")
         return redirect('/')
 
+
 @login_required
 def viewUsersHR(request):  # Test1
     emp_id = request.user.profile.emp_id
@@ -1157,7 +1121,6 @@ def viewUsersHR(request):  # Test1
 
 @login_required
 def viewEmployeeProfile(request, id, on_id):  # Test 1
-
     if request.method == 'POST':
         changed_name = request.POST.get('emp_name')
         changed_desi = request.POST.get('emp_desi')
@@ -1176,15 +1139,15 @@ def viewEmployeeProfile(request, id, on_id):  # Test 1
                 if i.emp_rm3_id == n.emp_id:
                     i.emp_rm3 = changed_name
                 change.append(i)
-            Profile.objects.bulk_update(change,['emp_rm1','emp_rm2','emp_rm3'])
+            Profile.objects.bulk_update(change, ['emp_rm1', 'emp_rm2', 'emp_rm3'])
             messages.success(request, 'Employee Name Changed Successfully!')
-            return redirect('/view-employee-profile/'+str(id)+'/'+str(on_id))
+            return redirect('/view-employee-profile/' + str(id) + '/' + str(on_id))
         elif type == 'desi':
             n = Profile.objects.get(id=id)
             n.emp_desi = changed_desi
             n.save()
             messages.success(request, 'Employee Designation Changed Successfully!')
-            return redirect('/view-employee-profile/'+str(id)+'/'+str(on_id))
+            return redirect('/view-employee-profile/' + str(id) + '/' + str(on_id))
 
     emp_id = request.user.profile.emp_id
     emp = Profile.objects.get(emp_id=emp_id)
@@ -1193,11 +1156,53 @@ def viewEmployeeProfile(request, id, on_id):  # Test 1
         onboarding = ""
     # else:
     #     onboarding = OnboardingnewHRC.objects.get(id=int(on_id))
+    rms = Profile.objects.exclude(emp_desi__in=agent_list)
     designations = Designation.objects.all()
-    data = {'profile': profile, 'onboard': onboarding, 'emp': emp, "on": on_id, "hr_list":hr_list,
-            'designations':designations}
+    departments = Departments.objects.all()
+    data = {'profile': profile, 'onboard': onboarding, 'emp': emp, "on": on_id, "hr_list": hr_list,
+            'designations': designations, 'rms': rms, 'departments': departments}
     return render(request, 'emp_profile_view.html', data)
 
+
+@login_required
+def changeMapping(request):
+    if request.method == "POST":
+        id = request.POST["id"]
+        rm1 = request.POST["rm1"]
+        rm1 = Profile.objects.get(id=rm1)
+        rm2 = request.POST["rm2"]
+        rm2 = Profile.objects.get(id=rm2)
+        rm3 = request.POST["rm3"]
+        rm3 = Profile.objects.get(id=rm3)
+        emp_department = request.POST["emp_department"]
+        emp_department = Departments.objects.get(id=emp_department).name
+        e = Profile.objects.get(id=id)
+        e.emp_rm1 = rm1.emp_name
+        e.emp_rm1_id = rm1.emp_id
+        e.emp_rm2 = rm2.emp_name
+        e.emp_rm2_id = rm2.emp_id
+        e.emp_rm3 = rm3.emp_name
+        e.emp_rm3_id = rm3.emp_id
+        e.emp_department = emp_department
+        e.save()
+        messages.success(request, 'Successfully Changed!')
+        return redirect(request.META.get('HTTP_REFERER'))
+    else:
+        messages.error(request, 'Bad Request!')
+        return redirect('/dashboard')
+
+@login_required
+def editAgentStatus(request):  # Test1
+    if request.method == 'POST':
+        id = request.POST['id']
+        agent_status = request.POST['new_status']
+        profile = Profile.objects.get(id=id)
+        profile.agent_status = agent_status
+        profile.save()
+        return redirect('/viewusers')
+    else:
+        messages.error(request, 'Bad Request!')
+        return redirect('/dashboard')
 
 @login_required
 def addNewTeam(request):  # Test1
@@ -1214,7 +1219,7 @@ def addNewTeam(request):  # Test1
             cam = Departments.objects.create(name=campaign, om=name, created_by=usr)
             cam.save()
             messages.info(request, 'Team ' + campaign + ' Created Successfully')
-            return redirect('/view-all-teams')
+            return redirect('/departments')
     else:
         messages.error(request, 'Invalid Request :)')
         return redirect('/view-all-teams')
@@ -1226,7 +1231,7 @@ def viewTeam(request):  # Test1
     emp_id = request.user.profile.emp_id
     emp = Profile.objects.get(emp_id=emp_id)
     managers = Profile.objects.all()
-    data = {'teams': teams, 'emp': emp, 'managers':managers}
+    data = {'teams': teams, 'emp': emp, 'managers': managers}
     return render(request, 'hr/view_team.html', data)
 
 
@@ -1268,6 +1273,7 @@ def viewallOMS(request, name):  # Test1
     else:
         messages.info(request, 'Bad Request')
         return redirect('/dashboard')
+
 
 def testFun(request):
     mydate = date.today()
@@ -1322,7 +1328,7 @@ def Reimbursement(request):
         return redirect('/reimbursement')
     else:
         tickets = ReimbursementTickets.objects.filter(profile=profile)
-        data = {'tickets':tickets}
+        data = {'tickets': tickets}
         return render(request, 'reimbursement.html', data)
 
 
@@ -1352,17 +1358,19 @@ def editReimbursement(request):
         messages.info(request, 'Bad Request')
         return redirect('/dashboard')
 
+
 @login_required
 def deleteReimbursement(request):
     if request.method == "POST":
         id = request.POST["id"]
         e = ReimbursementTickets.objects.get(id=id)
-        os.remove("media/"+str(e.bill))
+        os.remove("media/" + str(e.bill))
         e.delete()
         return redirect('/reimbursement')
     else:
         messages.info(request, 'Bad Request')
         return redirect('/dashboard')
+
 
 @login_required
 def viewReimbursement(request):
