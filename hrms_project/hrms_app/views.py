@@ -612,7 +612,7 @@ def finalLeaveRequest(request):  # Test1
         profiles_list = []
         for i in profiles:
             profiles_list.append(i)
-        leave_request = LeaveTable.objects.filter(Q(profile__in=profiles_list), Q(tl_approval=True),
+        leave_request = LeaveTable.objects.filter(Q(profile__in=profiles_list), Q(tl_approval='Approved'),
                                                   Q(manager_approval=False))
         data = {'leave_request': leave_request}
         return render(request, 'manager/leave_approval_rm3.html', data)
