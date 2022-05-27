@@ -1,0 +1,77 @@
+{% extends 'base_common.html' %}
+{% block main %}
+{% load static %}
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h2>Attendance Report</h2>
+                  </div>
+                  <div class="card-body">
+                    <table  id="datatablex" class="table table-stripe" style="width: 100% !important;">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Emp Name</th>
+                          <th>Emp ID</th>
+                          <th>Attendance</th>
+                          <th>Team</th>
+                          <th>Applied On</th>
+                          <th>RM1</th>
+                          <th>RM2</th>
+                          <th>RM3</th>
+                        </tr>
+                      </thead>
+                      <tfoot>
+                        <tr>
+                          <th>Date</th>
+                          <th>Emp Name</th>
+                          <th>Emp ID</th>
+                          <th>Attendance</th>
+                          <th>Team</th>
+                          <th>Applied On</th>
+                          <th>RM1</th>
+                          <th>RM2</th>
+                          <th>RM3</th>
+
+                        </tr>
+                      </tfoot>
+                      <tbody>
+                        {% for i in agt_cal_list %}
+                        <tr>
+                            <td>{{i.date}}</td>
+                            <td>{{i.emp_name}}</td>
+                            <td>{{i.emp_id}}</td>
+                            <td style="text-transform: capitalize;">{{i.att_actual}}</td>
+                            <td>{{i.team}}</td>
+                            <td>{{i.approved_on}}</td>
+                            <td>{{i.rm1}}</td>
+                            <td>{{i.rm2}}</td>
+                            <td>{{i.rm3}}</td>
+
+                        </tr>
+                        {% endfor %}
+
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+        <!-- /page content -->
+
+
+
+{% endblock %}
+
+{% block script %}
+<script>
+  $('#datatablex').DataTable( {
+      responsive: true
+  } );
+</script>
+{% endblock %}

@@ -50,7 +50,9 @@ urlpatterns = [
 
     # Attendance
     path('attendance', applyAttendace),
+    path('view-emp-attendance', viewTeamAttendance),
     path('week-attendance', weekAttendanceReport),
+    path('team-attendance-report', teamAttendanceReport),
 
     # reimbursement
     path('reimbursement', Reimbursement),

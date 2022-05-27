@@ -8,7 +8,7 @@
             <div class="col-md-12">
               <div class="welcome">
                 <div class="row">
-                    <div class="col-md-4" align="left" style="display: inline-flex;">
+                    <div class="col-md-4 col-sm-6" align="left" style="display: inline-flex;">
                       {% if login == False %}
                       <form action="/start-login" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
@@ -33,8 +33,7 @@
                       </form>
                       {% endif %}
                     </div>
-                    <div class="col-md-4"></div>
-                    <div class="col-md-4" align="right">
+                    <div class="col-md-8 col-sm-6" align="right">
                         <a class="btn btn-md btn-success" href="/ams-apply_leave" style="border-radius: 30px; float:right; padding:.375rem .75rem; font-size:0.8rem; ">
                           Apply Leave
                         </a>

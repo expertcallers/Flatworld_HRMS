@@ -92,7 +92,7 @@ text-align: center;
             <div class="col-md-12">
               <div class="welcome">
                 <div class="row">
-                    <div class="col-md-4" align="left" style="display: inline-flex;">
+                    <div class="col-md-4 col-sm-6" align="left" style="display: inline-flex;">
                       {% if login == False %}
                       <form action="/start-login" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
@@ -117,8 +117,7 @@ text-align: center;
                       </form>
                       {% endif %}
                     </div>
-                    <div class="col-md-4"></div>
-                    <div class="col-md-4" align="right">
+                    <div class="col-md-8 col-sm-6" align="right">
                         <a class="btn btn-md btn-success" href="/ams-apply_leave" style="border-radius: 30px; float:right; padding:.375rem .75rem; font-size:0.8rem; ">
                           Apply Leave
                         </a>
@@ -192,22 +191,70 @@ text-align: center;
                   </div>
                 </div>
 
+                <div class="col-md-2 mt-2">
+                  <div class="card topcards">
+                    <div class="card-header">
+                      <h2>Employees Under Me</h2>
+                    </div>
+                    <div class="card-body">
+                      <a href="/view-all-employees-oms/Agent"><h1 style="margin: 0px !important;">{{count_all_emps}}</h1></a>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-2 mt-2">
+                  <div class="card topcards">
+                    <div class="card-header">
+                      <h2>Reimbursement Requests</h2>
+                    </div>
+                    <div class="card-body">
+                      <a href="/view-reimbursement"><h1 style="margin: 0px !important;">{{reimbursement}}</h1></a>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-2 mt-2">
+                  <div class="card topcards max_height_200">
+                    <div class="card-header">
+                      <h2>Login Time</h2>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-md-12" align="center">
+                          {% if login == False %}
+                          <form action="/start-login" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" value="{{request.user.profile.emp_id}}" name="emp_id">
+                            <button class="btn btn-sm btn-success" style="border-radius: 30px;" id="start_login">
+                              Check-In <i class="fa fa-clock"></i>
+                            </button>
+                          </form>
+                          {% elif login == True %}
+                          <div style="display: block;">
+                            <p>Your today's login time</p>
+                            <h5>{{login_id}}</h5>
+                          </div>
+                          {% else %}
+                          <h4 id="login_duration"></h4>
+                          <form action="/stop-login" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" value="{{login_id}}" name="id">
+                            <button class="btn btn-sm btn-danger" style="border-radius: 30px;" id="stop_login" onclick="return confirmm()">
+                              Check-Out <i class="fa fa-clock"></i>
+                            </button>
+                          </form>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
               </div>
             </div>
           </div>
 
           <div class="row mb-4 mt-4">
 
-              <div class="col-md-2 mt-2">
-                <div class="card topcards">
-                  <div class="card-header">
-                    <h2>Employees Under Me</h2>
-                  </div>
-                  <div class="card-body">
-                    <a href="/view-all-employees-oms/Agent"><h1 style="margin: 0px !important;">{{count_all_emps}}</h1></a>
-                  </div>
-                </div>
-              </div>
 <!--            <div class="col-md-3">-->
 <!--              <div class="card-base">-->
 <!--                <div class="card-icon">-->
@@ -260,42 +307,6 @@ text-align: center;
 <!--              </div>-->
 <!--            </div>-->
 
-            <div class="col-md-2 mt-2">
-              <div class="card max_height_200">
-                <div class="card-header">
-                  <h2>Login Time</h2>
-                </div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-md-12" align="center">
-                      {% if login == False %}
-                      <form action="/start-login" method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <input type="hidden" value="{{request.user.profile.emp_id}}" name="emp_id">
-                        <button class="btn btn-sm btn-success" style="border-radius: 30px;" id="start_login">
-                          Check-In <i class="fa fa-clock"></i>
-                        </button>
-                      </form>
-                      {% elif login == True %}
-                      <div style="display: block;">
-                        <p>Your today's login time</p>
-                        <h5>{{login_id}}</h5>
-                      </div>
-                      {% else %}
-                      <h4 id="login_duration"></h4>
-                      <form action="/stop-login" method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <input type="hidden" value="{{login_id}}" name="id">
-                        <button class="btn btn-sm btn-danger" style="border-radius: 30px;" id="stop_login" onclick="return confirmm()">
-                          Check-Out <i class="fa fa-clock"></i>
-                        </button>
-                      </form>
-                      {% endif %}
-                    </div>
-                  </div>
-                </div>
-              </div>
-          </div>
             <!--  
             <div class="col-md-2">
               <div class="card-base">

@@ -1,6 +1,7 @@
+import csv
 import json
 import os
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
@@ -143,7 +144,9 @@ def hrDashboard(request):
         dict['st'] = st
         month_cal.append(dict)
     # Attendance Month view End
-    data = {'login': login, 'login_id': login_id, 'birthdays': birthdays, 'new_joins': new_joins, 'month_cal': month_cal}
+
+    teams = Departments.objects.all()
+    data = {'login': login, 'team':teams, 'login_id': login_id, 'birthdays': birthdays, 'new_joins': new_joins, 'month_cal': month_cal}
     return render(request, 'hr/hr_dashboard.html', data)
 
 
@@ -305,10 +308,13 @@ def managerDashboard(request):  # Test1 Test2
     # AMS Count
     all_ams_count = len(all_ams_under)
 
+    profiles = Profile.objects.filter(Q(emp_rm1_id=emp_id) | Q(emp_rm3_id=emp_id) | Q(emp_rm3_id=emp_id))
+    reimbursement = ReimbursementTickets.objects.filter(profile__in=profiles, respond=False).count()
+
     data = {'emp': emp, 'count_all_emps': count_all_emps, 'all_tls': all_tls_under, 'all_tls_count': all_tls_count,
             'all_ams': all_ams_under, 'all_ams_count': all_ams_count, 'final_req_count':final_req_count,
             'ini_req_count': ini_req_count, 'leave_esc_count': leave_esc_count, 'all_emp': all_emps_under,
-            'month_cal': month_cal, 'login': login, 'login_id': login_id,
+            'month_cal': month_cal, 'login': login, 'login_id': login_id, 'reimbursement':reimbursement
             }
     return render(request, 'manager/manager-dashboard.html', data)
 
@@ -872,6 +878,65 @@ def applyAttendace(request):  # Test1
 
 
 @login_required
+def viewTeamAttendance(request):  # Test1
+    if request.method == 'POST':
+        rm = request.user.profile.emp_id
+        start_date = request.POST['start_date']
+        end_date = request.POST['end_date']
+        emp_id = request.POST['emp_id']
+        if emp_id == 'All':
+            if request.user.profile.emp_desi in manager_list:
+                all_emp = Profile.objects.filter(Q(emp_rm1_id=rm) | Q(emp_rm2_id=rm) | Q(emp_rm3_id=rm))
+                emp_id_lst = []
+                for i in all_emp:
+                    if i.emp_id not in emp_id_lst:
+                        emp_id_lst.append(i.emp_id)
+                        under = Profile.objects.filter(Q(emp_rm1_id=i.emp_id) | Q(emp_rm2_id=i.emp_id) | Q(emp_rm3_id=i.emp_id))
+                        for j in under:
+                            if j.emp_id not in emp_id_lst:
+                                emp_id_lst.append(j.emp_id)
+                # cal = EcplCalander.objects.filter(emp_id__in=emp_id_lst,
+                #        date__range=[start_date, end_date])
+                # Export
+                response = HttpResponse(content_type='text/csv')
+                response['Content-Disposition'] = 'attachment; filename="attendance_report.csv"'
+                writer = csv.writer(response)
+                writer.writerow(['Date', 'Emp ID', 'Emp Name', 'Attendance', 'Designation', 'RM 1', 'RM 2', 'RM 3', 'Team'])
+                calanders = AttendanceCalendar.objects.filter(
+                    emp_id__in=emp_id_lst,date__range=[start_date, end_date]).values_list(
+                    'date', 'emp_id', 'emp_name', 'att_actual', 'emp_desi', 'rm1', 'rm2', 'rm3', 'team')
+                for c in calanders:
+                    writer.writerow(c)
+                return response
+            else:
+                # cal = EcplCalander.objects.filter(Q(rm1_id=rm) | Q(rm2_id=rm) | Q(rm3_id=rm),
+                #                              date__range=[start_date, end_date])
+                # Export
+                response = HttpResponse(content_type='text/csv')
+                response['Content-Disposition'] = 'attachment; filename="attendance_report.csv"'
+                writer = csv.writer(response)
+                writer.writerow(['Date', 'Emp ID', 'Emp Name', 'Attendance', 'Designation', 'RM 1', 'RM 2', 'RM 3', 'Team'])
+                calanders = AttendanceCalendar.objects.filter(
+                    Q(rm1_id=rm) | Q(rm2_id=rm) | Q(rm3_id=rm),date__range=[start_date, end_date]).values_list(
+                    'date', 'emp_id', 'emp_name', 'att_actual', 'emp_desi', 'rm1', 'rm2', 'rm3', 'team')
+                for c in calanders:
+                    writer.writerow(c)
+                return response
+
+        else:
+            cal = AttendanceCalendar.objects.filter(date__range=[start_date, end_date], emp_id=emp_id)
+        if emp_id == 'self':
+            cal = AttendanceCalendar.objects.filter(emp_id=rm, date__range=[start_date, end_date])
+        emp = Profile.objects.get(emp_id=rm)
+        data = {'agt_cal_list': cal, 'emp': emp}
+        return render(request, 'agent-calander-status.html', data)
+    else:
+        messages.info(request, "Invalid Request!")
+        return redirect('/dashboard')
+
+
+
+@login_required
 def weekAttendanceReport(request):  # Test1
     def Merge(a, b, c, d, e, f, g):
         res = {**a,**b,**c,**d,**e,**f,**g}
@@ -929,6 +994,40 @@ def weekAttendanceReport(request):  # Test1
     data = {"cal": new_lst, 'emp': empobj}
     return render(request, 'week_attendace_report.html', data)
 
+
+@login_required
+def teamAttendanceReport(request):  # Test 1
+    if request.method == 'POST':
+        start_date = request.POST['start_date']
+        end_date = request.POST['end_date']
+        team_name = request.POST['team_name']
+        start_date = start_date
+        end_date = end_date
+        emp_id = request.user.profile.emp_id
+        emp = Profile.objects.get(emp_id=emp_id)
+        if team_name == 'All Team':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="attendance_report.csv"'
+            writer = csv.writer(response)
+            writer.writerow(['Date', 'Emp ID', 'Emp Name', 'Attendance', 'Designation', 'RM 1', 'RM 2', 'RM 3', 'Team'])
+            calanders = AttendanceCalendar.objects.filter(date__range=[start_date, end_date]).values_list(
+                'date', 'emp_id', 'emp_name', 'att_actual', 'emp_desi', 'rm1', 'rm2', 'rm3', 'team')
+            for c in calanders:
+                writer.writerow(c)
+            return response
+        else:
+            team_name = Departments.objects.get(id=team_name).name
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="attendance_report.csv"'
+            writer = csv.writer(response)
+            writer.writerow(['Date', 'Emp ID', 'Emp Name', 'Attendance', 'Designation', 'RM 1', 'RM 2', 'RM 3', 'Team'])
+            calanders = AttendanceCalendar.objects.filter(team=team_name,date__range=[start_date, end_date]).values_list(
+                'date', 'emp_id', 'emp_name', 'att_actual', 'emp_desi', 'rm1', 'rm2', 'rm3', 'team')
+            for c in calanders:
+                writer.writerow(c)
+            return response
+    else:
+        return HttpResponse('<h2>*** GET not available ***</h2>')
 
 @login_required
 def Settings(request):  # Test1
