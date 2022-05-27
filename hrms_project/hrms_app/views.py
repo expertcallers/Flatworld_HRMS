@@ -644,7 +644,7 @@ def applyEscalation(request):  # Test1
         e.escalation = True
         e.escalation_reason = reason
         e.save()
-        emp_id = e.emp_id
+        emp_id = e.profile.emp_id
         no_days = e.no_days
         type = e.leave_type
         a = EmployeeLeaveBalance.objects.get(emp_id=emp_id)
