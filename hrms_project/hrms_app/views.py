@@ -251,7 +251,7 @@ def managerDashboard(request):  # Test1 Test2
     ini_req_count = LeaveTable.objects.filter(profile__in=profilelist, tl_approval=False,
                                               manager_approval=False).count()
 
-    final_req_count = LeaveTable.objects.filter(profile__in=profilelist, tl_approval=True,
+    final_req_count = LeaveTable.objects.filter(profile__in=profilelist, tl_status='Approved',
                                                 manager_approval=False).count()
     # Leave Escalation Count
     leave_esc_count = LeaveTable.objects.filter(profile__in=profilelist, manager_approval=False,
@@ -647,7 +647,7 @@ def applyEscalation(request):  # Test1
         emp_id = e.profile.emp_id
         no_days = e.no_days
         type = e.leave_type
-        a = EmployeeLeaveBalance.objects.get(emp_id=emp_id)
+        a = EmployeeLeaveBalance.objects.get(profile=e.profile)
         if type == "PL":
             a.pl_balance = a.pl_balance - no_days
         else:
