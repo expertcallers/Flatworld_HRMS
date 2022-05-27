@@ -661,8 +661,8 @@ def applyEscalation(request):  # Test1
         leave_history.date = date.today()
         leave_history.no_days = int(no_days)
         leave_history.emp_id = emp_id
-        pl = EmployeeLeaveBalance.objects.get(emp_id=emp_id).pl_balance
-        sl = EmployeeLeaveBalance.objects.get(emp_id=emp_id).sl_balance
+        pl = EmployeeLeaveBalance.objects.get(profile=e.profile).pl_balance
+        sl = EmployeeLeaveBalance.objects.get(profile=e.profile).sl_balance
         leave_history.total = pl + sl
         leave_history.save()
 
