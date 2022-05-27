@@ -232,17 +232,17 @@
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
-              <form action="/ams/apply-escalation" method="POST" enctype="multipart/form-data">
+              <form action="/apply-escalation" method="POST" enctype="multipart/form-data">
               {% csrf_token %}
               <div class="modal-body">
                 <div class="row">
                   <div class="col-md-6 mt-2">
                     <label for="emp_name">Employee Name</label>
-                    <input type="text" disabled value="{{i.emp_name}}" id="emp_name" class="form-control">
+                    <input type="text" disabled value="{{i.profile.emp_name}}" id="emp_name" class="form-control">
                   </div>
                   <div class="col-md-6 mt-2">
                     <label for="emp_id">Employee ID</label>
-                    <input type="text" disabled value="{{i.emp_id}}"  name="emp_id" id="emp_id" class="form-control">
+                    <input type="text" disabled value="{{i.profile.emp_id}}"  name="emp_id" id="emp_id" class="form-control">
                   </div>
                   <div class="col-md-4 mt-2">
                     <label for="app_on">Applied On</label>
@@ -294,17 +294,17 @@
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
-            <form action="/ams/sl-proof" method="POST" enctype="multipart/form-data">
+            <form action="/sl-proof" method="POST" enctype="multipart/form-data">
               {% csrf_token %}
               <div class="modal-body">
                 <div class="row">
                   <div class="col-md-6 mt-2">
                     <label for="proof_emp_name">Employee Name</label>
-                    <input type="text" disabled value="{{i.emp_name}}" id="proof_emp_name" class="form-control">
+                    <input type="text" disabled value="{{i.profile.emp_name}}" id="proof_emp_name" class="form-control">
                   </div>
                   <div class="col-md-6 mt-2">
                     <label for="proof_emp_id">Employee ID</label>
-                    <input type="text" disabled value="{{i.emp_id}}"  name="emp_id" id="proof_emp_id" class="form-control">
+                    <input type="text" disabled value="{{i.profile.emp_id}}"  name="emp_id" id="proof_emp_id" class="form-control">
                   </div>
                   <div class="col-md-4 mt-2">
                     <label for="proof_app_on">Applied On</label>
