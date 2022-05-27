@@ -500,7 +500,7 @@ def approveLeaveRM1(request):  # Test1
                 e.applied_date) + ' (ID: ' + str(e.id) + ')'
             leave_history.date = date.today()
             leave_history.no_days = int(no_days)
-            leave_history.emp_id = emp_id
+            leave_history.profile = e.profile
             pl = EmployeeLeaveBalance.objects.get(profile=profile).pl_balance
             sl = EmployeeLeaveBalance.objects.get(profile=profile).sl_balance
             leave_history.total = pl + sl
@@ -594,7 +594,7 @@ def finalLeaveRequest(request):  # Test1
                 e.applied_date) + ' (ID: ' + str(e.id) + ')'
             leave_history.date = date.today()
             leave_history.no_days = int(no_days)
-            leave_history.emp_id = emp_id
+            leave_history.profile = e.profile
             pl = EmployeeLeaveBalance.objects.get(profile=profile).pl_balance
             sl = EmployeeLeaveBalance.objects.get(profile=profile).sl_balance
             leave_history.total = pl + sl
