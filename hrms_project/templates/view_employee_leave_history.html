@@ -1,0 +1,72 @@
+{% extends 'base_common.html' %}
+{% block main %}
+{% load static %}
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+
+          <div class="page-title">
+            <div class="title_left">
+              <h3>Employees Leave History</h3>
+            </div>
+          </div>
+
+          <div class="row mt-4 pb-4">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-12">
+                      <table  id="datatablex" class="table table-striped" style="max-width: 100% !important;">
+                        <thead>
+                          <tr>
+                            <th class="align-middle align-center" style="text-align: center;">Name</th>
+                            <th class="align-middle align-center" style="text-align: center;">Employee ID</th>
+                            <th class="align-middle align-center" style="text-align: center;">Applied On</th>
+                            <th class="align-middle align-center" style="text-align: center;">Applied For Dates</th>
+                            <th class="align-middle align-center" style="text-align: center;">Number of days</th>
+                            <th class="align-middle align-center" style="text-align: center;">Leave Type</th>
+                            <th class="align-middle align-center" style="width: 250px;text-align: center;">Reason</th>
+                            <th class="align-middle align-center" style="text-align: center;">Status</th>
+                          </tr>
+                        </thead>
+                        <tfoot>
+                          <tr>
+                            <th class="align-middle align-center" style="text-align: center;">Name</th>
+                            <th class="align-middle align-center" style="text-align: center;">Employee ID</th>
+                            <th class="align-middle align-center" style="text-align: center;">Applied On</th>
+                            <th class="align-middle align-center" style="text-align: center;">Applied For Dates</th>
+                            <th class="align-middle align-center" style="text-align: center;">Number of days</th>
+                            <th class="align-middle align-center" style="text-align: center;">Leave Type</th>
+                            <th class="align-middle align-center" style="width: 250px;text-align: center;">Reason</th>
+                            <th class="align-middle align-center" style="text-align: center;">Status</th>
+                          </tr>
+                        </tfoot>
+                        <tbody>
+                        {% for i in leave %}
+                          <tr>
+                              <td>{{i.emp_name}}</td>
+                              <td>{{i.emp_id}}</td>
+                              <td>{{i.applied_date}}</td>
+                              <td>{{i.start_date}} to {{i.end_date}}</td>
+                              <td>{{i.no_days}}</td>
+                              <td>{{i.leave_type}}</td>
+                              <td><p>{{i.agent_reason}}</p></td>
+                              <td align="center">
+                                {% if i.status %}{{i.status}}{% else %}Pending{% endif %}
+                              </td>
+                          </tr>
+                        {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /page content -->
+
+{% endblock %}
+

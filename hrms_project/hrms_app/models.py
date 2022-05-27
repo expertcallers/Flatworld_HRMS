@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -29,11 +29,13 @@ class Profile(models.Model):
     def __str__(self):
         return self.emp_name
 
+
 class Departments(models.Model):
-    unique_id = models.CharField(max_length=150,null=True,blank=True)
+    unique_id = models.CharField(max_length=150, null=True, blank=True)
     name = models.CharField(max_length=100)
-    om = models.CharField(max_length=50,null=True,blank=True)
-    created_by = models.CharField(max_length=50,null=True,blank=True)
+    om = models.CharField(max_length=50, null=True, blank=True)
+    created_by = models.CharField(max_length=50, null=True, blank=True)
+
     def __str__(self):
         return self.name
 
@@ -125,43 +127,47 @@ class LoginHistory(models.Model):
     logout = models.DateTimeField(null=True, blank=True)
     done = models.BooleanField(default=False)
 
+
 class LeaveTable(models.Model):
-    unique_id = models.CharField(max_length=150,null=True,blank=True)
+    unique_id = models.CharField(max_length=150, null=True, blank=True)
     profile = models.ForeignKey(Profile, on_delete=models.PROTECT)
-    leave_type = models.CharField(max_length=50,null=True)
-    applied_date = models.DateTimeField(null=True,blank=True)
-    start_date=models.DateField()
-    end_date=models.DateField()
+    leave_type = models.CharField(max_length=50, null=True)
+    applied_date = models.DateTimeField(null=True, blank=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
     no_days = models.IntegerField()
     agent_reason = models.TextField(null=True)
     tl_approval = models.BooleanField(default=False)
-    tl_status = models.CharField(max_length=50,null=True,blank=True)
+    tl_status = models.CharField(max_length=50, null=True, blank=True)
     tl_reason = models.TextField(null=True)
-    status=models.CharField(max_length=50, null=True)
+    status = models.CharField(max_length=50, null=True)
     manager_approval = models.BooleanField(default=False)
     manager_reason = models.TextField(null=True)
     manager_status = models.CharField(max_length=50, null=True, blank=True)
     escalation = models.BooleanField(default=False)
     escalation_reason = models.TextField(null=True)
-    proof = models.FileField(null=True, blank=True,upload_to='SL_Proof/')
+    proof = models.FileField(null=True, blank=True, upload_to='SL_Proof/')
+
 
 class leaveHistory(models.Model):
-    unique_id = models.CharField(max_length=150,null=True,blank=True)
+    unique_id = models.CharField(max_length=150, null=True, blank=True)
     profile = models.ForeignKey(Profile, on_delete=models.PROTECT)
     date = models.DateField()
     leave_type = models.CharField(max_length=30)
     transaction = models.CharField(max_length=300)
     no_days = models.FloatField()
-    total = models.FloatField(null=True,blank=True)
+    total = models.FloatField(null=True, blank=True)
+
 
 class EmployeeLeaveBalance(models.Model):
-    unique_id = models.CharField(max_length=150,null=True,blank=True)
+    unique_id = models.CharField(max_length=150, null=True, blank=True)
     profile = models.ForeignKey(Profile, on_delete=models.PROTECT)
     pl_balance = models.FloatField()
     sl_balance = models.FloatField()
 
+
 class AssetsDetails(models.Model):
-    unique_id = models.CharField(max_length=150,null=True,blank=True)
+    unique_id = models.CharField(max_length=150, null=True, blank=True)
     added_on = models.DateTimeField()
     added_by = models.CharField(max_length=300)
     added_by_id = models.CharField(max_length=30)
@@ -173,19 +179,36 @@ class AssetsDetails(models.Model):
 
 
 class AttendanceCalendar(models.Model):
-    unique_id = models.CharField(max_length=150,null=True,blank=True)
+    unique_id = models.CharField(max_length=150, null=True, blank=True)
     team = models.CharField(max_length=300)
     date = models.DateField()
     emp_name = models.CharField(max_length=300)
-    emp_id = models.CharField(max_length=50,null=True)
-    emp_desi = models.CharField(max_length=100,null=True)
-    att_actual = models.CharField(max_length=50,null=True)
+    emp_id = models.CharField(max_length=50, null=True)
+    emp_desi = models.CharField(max_length=100, null=True)
+    att_actual = models.CharField(max_length=50, null=True)
     approved_on = models.DateTimeField(null=True)
-    appoved_by = models.CharField(max_length=300,null=True)
+    appoved_by = models.CharField(max_length=300, null=True)
     rm1 = models.CharField(max_length=200, null=True)
     rm2 = models.CharField(max_length=200, null=True)
     rm3 = models.CharField(max_length=200, null=True)
     rm1_id = models.CharField(max_length=30, null=True)
     rm2_id = models.CharField(max_length=30, null=True)
     rm3_id = models.CharField(max_length=30, null=True)
-    team_id = models.IntegerField(null=True,blank=True)
+    team_id = models.IntegerField(null=True, blank=True)
+
+
+class ReimbursementTickets(models.Model):
+    unique_id = models.CharField(max_length=150, null=True, blank=True)
+    profile = models.ForeignKey(Profile, on_delete=models.PROTECT, blank=True)
+    submit_date = models.DateField(default=date.today(), blank=True)
+    date_for = models.DateField(blank=True)
+    type = models.CharField(max_length=100, blank=True)
+    amount = models.CharField(max_length=100, blank=True)
+    bill = models.FileField(upload_to='Reimbursement Bills/', blank=True)
+    details = models.TextField(blank=True)
+    approved_by = models.CharField(max_length=150, null=True, blank=True)
+    approved_by_id = models.CharField(max_length=50, null=True, blank=True)
+    approved_on = models.DateField(blank=True, null=True)
+    approval_comments = models.TextField(blank=True, null=True)
+    respond = models.BooleanField(default=False)
+    status = models.CharField(max_length=150, default='Pending')

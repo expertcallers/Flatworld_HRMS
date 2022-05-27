@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import date, timedelta
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -98,7 +99,8 @@ def hrDashboard(request):
         pass
     try:
         login = LoginHistory.objects.get(profile=profile, date=date.today(), done=True)
-        login_id = login.logout - login.login
+        login_id = datetime.strptime(str(login.logout - login.login),"%H:%M:%S.%f")
+        login_id = (login_id).strftime("%H:%M:%S")
         login = True
     except LoginHistory.DoesNotExist:
         pass
@@ -148,6 +150,29 @@ def hrDashboard(request):
 @login_required
 def agentDashBoard(request):  # Test1 Test2
     if request.user.profile.emp_desi in agent_list:
+        profile = request.user.profile
+        # Check in start
+        login = False
+        login_id = None
+        try:
+            login = LoginHistory.objects.filter(profile=profile, done=False).order_by('id')[:1]
+            if login:
+                for i in login:
+                    login_id = i.id
+                    login = str(i.login)
+            else:
+                login = False
+                login_id = None
+        except LoginHistory.DoesNotExist:
+            pass
+        try:
+            login = LoginHistory.objects.get(profile=profile, date=date.today(), done=True)
+            login_id = datetime.strptime(str(login.logout - login.login), "%H:%M:%S.%f")
+            login_id = (login_id).strftime("%H:%M:%S")
+            login = True
+        except LoginHistory.DoesNotExist:
+            pass
+        # Check in End
         emp_id = request.user.profile.emp_id
         profile = request.user.profile
         emp = Profile.objects.get(emp_id=emp_id)
@@ -176,11 +201,117 @@ def agentDashBoard(request):  # Test1 Test2
             dict['dt'] = i
             dict['st'] = st
             month_cal.append(dict)
-        data = {'emp': emp, 'leave_hist': leave_hist, 'month_cal': month_cal}
+        data = {'login': login, 'login_id': login_id, 'emp': emp, 'leave_hist': leave_hist, 'month_cal': month_cal}
         return render(request, 'agent/agent-dashboard.html', data)
     else:
         messages.error(request, 'Unauthorized access. You have been Logged Our !')
         return redirect('')
+
+
+
+@login_required
+def managerDashboard(request):  # Test1 Test2
+    profile = request.user.profile
+    # Check in start
+    login = False
+    login_id = None
+    try:
+        login = LoginHistory.objects.filter(profile=profile, done=False).order_by('id')[:1]
+        if login:
+            for i in login:
+                login_id = i.id
+                login = str(i.login)
+        else:
+            login = False
+            login_id = None
+    except LoginHistory.DoesNotExist:
+        pass
+    try:
+        login = LoginHistory.objects.get(profile=profile, date=date.today(), done=True)
+        login_id = datetime.strptime(str(login.logout - login.login), "%H:%M:%S.%f")
+        login_id = (login_id).strftime("%H:%M:%S")
+        login = True
+    except LoginHistory.DoesNotExist:
+        pass
+    # Check in End
+
+    mgr_name = request.user.profile.emp_name
+    emp_id = request.user.profile.emp_id
+
+    emp = Profile.objects.get(emp_id=emp_id)
+    # Leave Requests
+    profilelist = []
+    myprof = Profile.objects.filter(Q(emp_rm3_id=emp_id))
+    for i in myprof:
+        profilelist.append(i)
+    ini_req_count = LeaveTable.objects.filter(profile__in=profilelist, tl_approval=False, manager_approval=False).count()
+
+    final_req_count = LeaveTable.objects.filter(profile__in=profilelist, tl_approval=True, manager_approval=False).count()
+    # Leave Escalation Count
+    leave_esc_count = LeaveTable.objects.filter(profile__in=profilelist, manager_approval=False, escalation=True).count()
+
+    # Month view
+    month_days = []
+    todays_date = date.today()
+    year = todays_date.year
+    month = todays_date.month
+    a, num_days = calendar.monthrange(year, month)
+    start_date = date(year, month, 1)
+    end_date = date(year, month, num_days)
+    delta = timedelta(days=1)
+    while start_date <= end_date:
+        month_days.append(start_date.strftime("%Y-%m-%d"))
+        start_date += delta
+    month_cal = []
+    for i in month_days:
+        dict = {}
+        try:
+            st = AttendanceCalendar.objects.get(Q(date=i), Q(emp_id=emp_id)).att_actual
+        except AttendanceCalendar.DoesNotExist:
+            st = 'Unmarked'
+        dict['dt'] = i
+        dict['st'] = st
+        month_cal.append(dict)
+
+    # All Employees
+    all_emps = Profile.objects.filter(Q(agent_status='Active'),Q(emp_rm1_id=emp_id) | Q(emp_rm2_id=emp_id) | Q(emp_rm3_id=emp_id))
+    all_emps_under = []
+    for i in all_emps:
+        if i not in all_emps_under:
+            all_emps_under.append(i)
+            under = Profile.objects.filter(Q(agent_status='Active'),Q(emp_rm1_id=i.emp_id) | Q(emp_rm2_id=i.emp_id) | Q(emp_rm3_id=i.emp_id))
+            for j in under:
+                if j not in all_emps_under:
+                    all_emps_under.append(j)
+
+    # count of all employees
+    count_all_emps = len(all_emps_under)
+
+    # TLS
+    all_tls_under = []
+    for i in all_emps_under:
+        if i not in all_tls_under:
+            if i.emp_desi == 'Team Leader':
+                all_tls_under.append(i)
+    # TLS Count
+    all_tls_count = len(all_tls_under)
+    # AMS
+    all_ams_under = []
+    for i in all_emps_under:
+        if i not in all_ams_under:
+            if i.emp_desi == 'Assistant Manager':
+                all_ams_under.append(i)
+
+    # AMS Count
+    all_ams_count = len(all_ams_under)
+
+    data = {'emp': emp, 'count_all_emps': count_all_emps, 'all_tls': all_tls_under, 'all_tls_count': all_tls_count,
+            'all_ams': all_ams_under, 'all_ams_count': all_ams_count, 'final_req_count':final_req_count,
+            'ini_req_count': ini_req_count, 'leave_esc_count': leave_esc_count, 'all_emp': all_emps_under,
+            'month_cal': month_cal, 'login': login, 'login_id': login_id,
+            }
+    return render(request, 'manager/manager-dashboard.html', data)
+
 
 
 @login_required
@@ -209,7 +340,7 @@ def stopLogin(request):
         login.done = True
         login.logout = datetime.now()
         login.save()
-        return redirect('/hr-dashboard')
+        return redirect('/dashboard')
     else:
         messages.info(request, 'Invalid Request')
         return redirect("/")
@@ -260,7 +391,7 @@ def applyLeave(request):  # Test1
         common_dates = set(leave_dates_list) & set(new_leave_dates)
         if common_dates:
             messages.error(request, "Leaves have already been applied for selected date(s).")
-            return redirect('/ams/ams-apply_leave')
+            return redirect('/ams-apply_leave')
         else:
             e = LeaveTable()
             e.unique_id = unique_id
@@ -271,16 +402,12 @@ def applyLeave(request):  # Test1
             e.no_days = no_days
             e.agent_reason = agent_reason
             e.profile = prof
-            # rm1_desi = Profile.objects.get(emp_id=emp_rm1_id).emp_desi
-            #
-            # if rm1_desi in manager_list or rm1_desi in hr_om_list:
-            #     e.tl_status = 'Approved'
-            #     e.tl_approval = True
-            #     e.tl_reason = 'OM as TL'
-            # if emp_desi in manager_list or emp_desi in tl_am_list or emp_desi in hr_tl_am_list or emp_desi in hr_om_list:
-            #     e.tl_status = 'Approved'
-            #     e.tl_approval = True
-            #     e.tl_reason = 'Self Approved'
+
+            # If Only one leave Approval needed
+            # e.tl_status = 'Approved'
+            # e.tl_approval = True
+            # e.tl_reason = 'Self Approved'
+
             e.save()
             leave_balance = EmployeeLeaveBalance.objects.get(profile=prof)
             if leave_type == 'PL':
@@ -329,6 +456,290 @@ def applyLeave(request):  # Test1
                 'leave_his': leave_his}
         return render(request, 'apply-leave.html', data)
 
+
+@login_required
+def approveLeaveRM1(request):  # Test1
+    if request.method == "POST":
+        id = request.POST["id"]
+        e = LeaveTable.objects.get(id=id)
+        emp_id = e.profile.emp_id
+        profile = Profile.objects.get(emp_id=emp_id)
+        leave_type = e.leave_type
+        no_days = e.no_days
+        tl_response = request.POST['tl_response']
+        tl_reason = request.POST['tl_reason']
+        if tl_response == 'Approve':
+            tl_approval = True
+            tl_status = 'Approved'
+            status = 'Pending'
+        else:
+            tl_approval = True
+            tl_status = 'Rejected'
+            status = 'Rejected'
+            leave_balance = EmployeeLeaveBalance.objects.get(profile=profile)
+            if leave_type == 'PL':
+                leave_balance.pl_balance += int(no_days)
+                leave_balance.save()
+            elif leave_type == 'SL':
+                leave_balance.sl_balance += int(no_days)
+                leave_balance.save()
+            leave_history = leaveHistory()
+            leave_history.leave_type = leave_type
+            leave_history.transaction = 'Leave Refund as RM1 Rejected, Leave applied on: '+str(e.applied_date)+' (ID: '+str(e.id)+')'
+            leave_history.date = date.today()
+            leave_history.no_days = int(no_days)
+            leave_history.emp_id = emp_id
+            pl = EmployeeLeaveBalance.objects.get(emp_id=emp_id).pl_balance
+            sl = EmployeeLeaveBalance.objects.get(emp_id=emp_id).sl_balance
+            leave_history.total = pl + sl
+            leave_history.save()
+        e.tl_approval = tl_approval
+        e.tl_reason = tl_reason
+        e.tl_status = tl_status
+        e.status = status
+        e.save()
+        return redirect('/view-initial-leave-request')
+
+
+@login_required
+def initialLeaveRequest(request):  # Test1
+    emp_id = request.user.profile.emp_id
+    profiles = Profile.objects.filter(Q(emp_rm1_id=emp_id))
+    profiles_list = []
+    for i in profiles:
+        profiles_list.append(i)
+    leave_request = LeaveTable.objects.filter(Q(profile__in=profiles_list), Q(tl_approval=False),
+                                              Q(manager_approval=False))
+    data = {'leave_request': leave_request}
+    return render(request, 'manager/leave_approval_rm1.html', data)
+
+
+@login_required
+def finalLeaveRequest(request):  # Test1
+    if request.method == 'POST':
+        id = request.POST["id"]
+        e = LeaveTable.objects.get(id=id)
+        emp_id = e.profile.emp_id
+        team = e.profile.emp_department
+        att_actual = e.leave_type
+        leave_type = e.leave_type
+        no_days = e.no_days
+        rm1 = e.profile.emp_rm1
+        rm2 = e.profile.emp_rm2
+        rm3 = e.profile.emp_rm3
+        emp_desi = e.profile.emp_desi
+        emp_name = e.profile.emp_name
+        now = datetime.now()
+        start_date = e.start_date
+        end_date = e.end_date
+        om_response = request.POST['tl_response']
+        om_reason = request.POST['tl_reason']
+        if om_response == 'Approve':
+            manager_approval = True
+            manager_status = 'Approved'
+            status = 'Approved'
+            month_days = []
+            start_date = start_date
+            end_date = end_date
+            delta = timedelta(days=1)
+            while start_date <= end_date:
+                month_days.append(start_date.strftime("%Y-%m-%d"))
+                start_date += delta
+            for i in month_days:
+                try:
+                    cal = AttendanceCalendar.objects.get(Q(date=i), Q(emp_id=emp_id))
+                    cal.att_actual = att_actual
+                    cal.appoved_by = request.user.profile.emp_name
+                    cal.approved_on = now
+                    cal.save()
+                except AttendanceCalendar.DoesNotExist:
+                    cal = AttendanceCalendar.objects.create(
+                        team=team, date=i, emp_id=emp_id,
+                        att_actual=att_actual,
+                        rm1=rm1, rm2=rm2, rm3=rm3,
+                        rm1_id=e.emp_rm1_id, rm2_id=e.emp_rm2_id, rm3_id=e.emp_rm3_id,
+                        approved_on=now, emp_desi=emp_desi, appoved_by=request.user.profile.emp_name,
+                        emp_name=emp_name
+                    )
+                    cal.save()
+
+            # sandwich policy calculation
+
+            # week_off = []
+            # last = ''
+            # if leave_type == 'SL':
+            #     start_date = e.start_date
+            #     sand_start_date = start_date - timedelta(days=1)
+            #     cal = EcplCalander.objects.get(Q(date=sand_start_date), Q(emp_id=emp_id)).att_actual
+            #     if cal == "Week OFF" or cal == "SL" or cal == "PL":
+            #         week_off.append(sand_start_date)
+            #         sand_start_date -= timedelta(days=1)
+            #         sand_end_date = start_date - timedelta(days=15)
+            #         while sand_start_date > sand_end_date:
+            #             cal = EcplCalander.objects.get(Q(date=sand_start_date), Q(emp_id=emp_id)).att_actual
+            #             if cal == "Week OFF":
+            #                 week_off.append(sand_start_date)
+            #             elif cal == 'SL' or cal == 'PL':
+            #                 last = sand_start_date
+            #                 break
+            #             else:
+            #                 break
+            #             sand_start_date -= timedelta(days=1)
+
+            # elif leave_type == 'PL':
+            #     start_date = e.start_date
+            #     sand_start_date = start_date - timedelta(days=1)
+            #     try:
+            #         cal = EcplCalander.objects.get(Q(date=sand_start_date), Q(emp_id=emp_id)).att_actual
+            #         if cal == "Week OFF" or cal == "PL" or cal == "SL":
+            #             week_off.append(sand_start_date)
+            #             sand_start_date -= timedelta(days=1)
+            #             sand_end_date = start_date - timedelta(days=15)
+            #             while sand_start_date > sand_end_date:
+            #                 cal = EcplCalander.objects.get(Q(date=sand_start_date), Q(emp_id=emp_id)).att_actual
+            #                 if cal == "Week OFF":
+            #                     week_off.append(sand_start_date)
+            #                 elif cal == 'SL' or cal == 'PL':
+            #                     last = sand_start_date
+            #                     break
+            #                 else:
+            #                     break
+            #                 sand_start_date -= timedelta(days=1)
+            #     except:
+            #         pass
+            # if last != '':
+            #     cal_list = []
+            #     last += timedelta(days=1)
+            #     while start_date > last:
+            #         start_date -= timedelta(days=1)
+            #         cal = EcplCalander.objects.get(Q(date=start_date), Q(emp_id=emp_id))
+            #         cal.att_actual = "Absent (Sandwich)"
+            #         cal_list.append(cal)
+            #     EcplCalander.objects.bulk_update(cal_list,['att_actual'])
+
+        else:
+            manager_approval = True
+            manager_status = 'Rejected'
+            status = 'Rejected'
+            profile = Profile.objects.get(emp_id=emp_id)
+            leave_balance = EmployeeLeaveBalance.objects.get(profile=profile)
+            if leave_type == 'PL':
+                leave_balance.pl_balance += int(no_days)
+                leave_balance.save()
+            elif leave_type == 'SL':
+                leave_balance.sl_balance += int(no_days)
+                leave_balance.save()
+
+            leave_history = leaveHistory()
+            leave_history.leave_type = leave_type
+            leave_history.transaction = 'Leave Refund as RM3 Rejected, Leave applied on: ' + str(
+                e.applied_date) + ' (ID: ' + str(e.id) + ')'
+            leave_history.date = date.today()
+            leave_history.no_days = int(no_days)
+            leave_history.emp_id = emp_id
+            pl = EmployeeLeaveBalance.objects.get(profile=profile).pl_balance
+            sl = EmployeeLeaveBalance.objects.get(profile=profile).sl_balance
+            leave_history.total = pl + sl
+            leave_history.save()
+
+        e.manager_approval = manager_approval
+        e.manager_reason = om_reason
+        e.manager_status = manager_status
+        e.status = status
+        e.save()
+        return redirect('/dashboard')
+    else:
+        emp_id = request.user.profile.emp_id
+        profiles = Profile.objects.filter(Q(emp_rm3_id=emp_id))
+        profiles_list = []
+        for i in profiles:
+            profiles_list.append(i)
+        leave_request = LeaveTable.objects.filter(Q(profile__in=profiles_list), Q(tl_approval=True),
+                                                  Q(manager_approval=False))
+        data = {'leave_request': leave_request}
+        return render(request, 'manager/leave_approval_rm3.html', data)
+
+
+@login_required
+def SLProofSubmit(request):  # Test1
+    if request.method == 'POST':
+        id = request.POST['id']
+        proof = request.FILES['proof']
+        leave = LeaveTable.objects.get(id=id)
+        last_date = leave.end_date
+        timee = (date.today() - last_date).days
+        if timee <= 2:
+            leave.proof = proof
+            leave.save()
+            return redirect('/ams-apply_leave')
+        else:
+            messages.info(request, "The time has exceeded cannot upload now :)")
+            return redirect('/ams-apply_leave')
+
+@login_required
+def applyEscalation(request):  # Test1
+    if request.method == "POST":
+        id = request.POST["id"]
+        reason = request.POST['reason']
+        e = LeaveTable.objects.get(id=id)
+        e.escalation = True
+        e.escalation_reason = reason
+        e.save()
+        emp_id = e.emp_id
+        no_days = e.no_days
+        type = e.leave_type
+        a = EmployeeLeaveBalance.objects.get(emp_id=emp_id)
+        if type == "PL":
+            a.pl_balance = a.pl_balance - no_days
+        else:
+            a.sl_balance = a.sl_balance - no_days
+        a.save()
+
+        leave_history = leaveHistory()
+        leave_history.leave_type = e.leave_type
+        leave_history.transaction = 'Applied for Escalation, Leave applied on: ' + str(e.applied_date)+' (ID: '+str(e.id)+')'
+        leave_history.date = date.today()
+        leave_history.no_days = int(no_days)
+        leave_history.emp_id = emp_id
+        pl = EmployeeLeaveBalance.objects.get(emp_id=emp_id).pl_balance
+        sl = EmployeeLeaveBalance.objects.get(emp_id=emp_id).sl_balance
+        leave_history.total = pl + sl
+        leave_history.save()
+
+        return redirect('/ams-apply_leave')
+    else:
+        pass
+
+
+@login_required
+def viewEscalation(request):  # Test1
+    emp_id = request.user.profile.emp_id
+    profiles = Profile.objects.filter(Q(emp_rm3_id=emp_id))
+    profiles_list = []
+    for i in profiles:
+        profiles_list.append(i)
+    leave_request = LeaveTable.objects.filter(profile__in=profiles_list, tl_approval=True, escalation=True,
+                                              manager_approval=False)
+    data = {'leave_request': leave_request}
+    return render(request, 'manager/leave_escalation.html', data)
+
+
+@login_required
+def viewLeaveHistory(request):  # Test1
+    emp_id = request.user.profile.emp_id
+    leave = Profile.objects.filter(Q(emp_rm1_id=emp_id) | Q(emp_rm2_id=emp_id) | Q(emp_rm3_id=emp_id))
+    direct = LeaveTable.objects.filter(Q(emp_rm1_id=emp_id) | Q(emp_rm2_id=emp_id) | Q(emp_rm3_id=emp_id))
+    leave_lst = []
+    for i in leave:
+        under = LeaveTable.objects.filter(Q(emp_rm1_id=i.emp_id) | Q(emp_rm2_id=i.emp_id) | Q(emp_rm3_id=i.emp_id))
+        for j in under:
+            if j not in leave_lst:
+                leave_lst.append(j)
+    for i in direct:
+        if i not in leave_lst:
+            leave_lst.append(i)
+    data = {'leave': leave_lst}
+    return render(request, 'view_employee_leave_history.html', data)
 
 @login_required
 def assetsAssigning(request):
@@ -410,7 +821,7 @@ def applyAttendace(request):  # Test1
         try:
             cal = AttendanceCalendar.objects.get(Q(date=ddate), Q(emp_id=emp_id), ~Q(att_actual='Unmarked'))
             messages.info(request, '*** Already Marked in Calendar, Please Refresh the page and try again ***')
-            return redirect('/ams/team-attendance')
+            return redirect('/team-attendance')
         except AttendanceCalendar.DoesNotExist:
             cal = AttendanceCalendar.objects.get(emp_id=emp_id, date=ddate)
             cal.att_actual = att_actual
@@ -458,6 +869,65 @@ def applyAttendace(request):  # Test1
         emp = Profile.objects.get(emp_id=emp_id)
         data = {'todays_att': todays_list_list, 'ystdays_att': ystday_list_list, 'dbys_att': dby_list_list, 'emp': emp}
         return render(request, 'attendance.html', data)
+
+
+@login_required
+def weekAttendanceReport(request):  # Test1
+    def Merge(a, b, c, d, e, f, g):
+        res = {**a,**b,**c,**d,**e,**f,**g}
+        return res
+    empobj = Profile.objects.get(emp_id=request.user.profile.emp_id)
+    emp_id = request.user.profile.emp_id
+    day = date.today()
+    start = day - timedelta(days=day.weekday())
+    start = start + timedelta(days=-1)
+    start_year = start.year
+    start_month = start.month
+    start_day = start.day
+    end = start + timedelta(days=6)
+    start = date(start_year, start_month, start_day)
+    end_year = end.year
+    end_month = end.month
+    end_day = end.day
+    end = date(end_year, end_month, end_day)
+    weeks = ['sund', 'mon', 'tue', 'wed', 'thur', 'fri', 'sat']
+    emp_id_list = []
+    ems = Profile.objects.filter(
+        Q(emp_rm1_id=emp_id) | Q(emp_rm2_id=emp_id) | Q(emp_rm3_id=emp_id), Q(agent_status='Active')
+    )
+    for i in ems:
+        if i.emp_id not in emp_id_list:
+            emp_id_list.append(i.emp_id)
+    weekdays = []
+    delta = timedelta(days=1)
+    while start <= end:
+        weekdays.append(start)
+        start += delta
+    lst = []  # main data
+    calobj = AttendanceCalendar.objects.filter(emp_id__in=emp_id_list, date__in=weekdays)
+    for i in calobj:
+        samp = {}
+        samp['name'] = i.emp_name
+        samp["emp_id"] = i.emp_id
+        samp[i.date] = i.att_actual
+        lst.append(samp)
+    n = 0
+    new_lst = []
+    sort = sorted(lst, key=lambda x: x['emp_id'])
+
+    for i in range(0,len(emp_id_list)):
+        individual = Merge(sort[n], sort[n + 1], sort[n + 2], sort[n + 3], sort[n + 4], sort[n + 5], sort[n + 6])
+        j = 0
+        for w in weekdays:
+            a = weeks[j]
+            individual[a] = individual[w]
+            del individual[w]
+            j += 1
+        new_lst.append(individual)
+        n+=7
+
+    data = {"cal": new_lst, 'emp': empobj}
+    return render(request, 'week_attendace_report.html', data)
 
 
 @login_required
@@ -568,7 +1038,7 @@ def addNewDesi(request):
         try:
             Designation.objects.get(name__iexact=name)
             messages.success(request, "Designation with same name already present!")
-            return redirect('/ams/add-new-user')
+            return redirect('/add-new-user')
         except Designation.DoesNotExist:
             Designation.objects.create(name=name, created_by=request.user.profile.emp_name)
             messages.success(request, "New Designation Added!")
@@ -584,6 +1054,50 @@ def viewUsersHR(request):  # Test1
     add = Profile.objects.all()
     data = {'add': add, 'emp': emp}
     return render(request, 'hr/view_users.html', data)
+
+
+@login_required
+def viewEmployeeProfile(request, id, on_id):  # Test 1
+
+    if request.method == 'POST':
+        changed_name = request.POST.get('emp_name')
+        changed_desi = request.POST.get('emp_desi')
+        type = request.POST['from']
+        if type == 'name':
+            n = Profile.objects.get(id=id)
+            n.emp_name = changed_name
+            n.save()
+            x = Profile.objects.filter(Q(emp_rm1_id=n.emp_id) | Q(emp_rm2_id=n.emp_id) | Q(emp_rm3_id=n.emp_id))
+            change = []
+            for i in x:
+                if i.emp_rm1_id == n.emp_id:
+                    i.emp_rm1 = changed_name
+                if i.emp_rm2_id == n.emp_id:
+                    i.emp_rm2 = changed_name
+                if i.emp_rm3_id == n.emp_id:
+                    i.emp_rm3 = changed_name
+                change.append(i)
+            Profile.objects.bulk_update(change,['emp_rm1','emp_rm2','emp_rm3'])
+            messages.success(request, 'Employee Name Changed Successfully!')
+            return redirect('/view-employee-profile/'+str(id)+'/'+str(on_id))
+        elif type == 'desi':
+            n = Profile.objects.get(id=id)
+            n.emp_desi = changed_desi
+            n.save()
+            messages.success(request, 'Employee Designation Changed Successfully!')
+            return redirect('/view-employee-profile/'+str(id)+'/'+str(on_id))
+
+    emp_id = request.user.profile.emp_id
+    emp = Profile.objects.get(emp_id=emp_id)
+    profile = Profile.objects.get(id=id)
+    if on_id == "None":
+        onboarding = ""
+    # else:
+    #     onboarding = OnboardingnewHRC.objects.get(id=int(on_id))
+    designations = Designation.objects.all()
+    data = {'profile': profile, 'onboard': onboarding, 'emp': emp, "on": on_id, "hr_list":hr_list,
+            'designations':designations}
+    return render(request, 'emp_profile_view.html', data)
 
 
 @login_required
@@ -616,3 +1130,160 @@ def viewTeam(request):  # Test1
     data = {'teams': teams, 'emp': emp, 'managers':managers}
     return render(request, 'hr/view_team.html', data)
 
+
+@login_required
+def viewallOMS(request, name):  # Test1
+    emp_id = request.user.profile.emp_id
+    emp = Profile.objects.get(emp_id=emp_id)
+    all_emp = Profile.objects.filter(Q(agent_status='Active'),
+                                     Q(emp_rm1_id=emp_id) | Q(emp_rm2_id=emp_id) | Q(emp_rm3_id=emp_id))
+    all_emps_under = []
+    for i in all_emp:
+        if i not in all_emps_under:
+            all_emps_under.append(i)
+            under = Profile.objects.filter(Q(agent_status='Active'),
+                                           Q(emp_rm1_id=i.emp_id) | Q(emp_rm2_id=i.emp_id) | Q(emp_rm3_id=i.emp_id))
+            for j in under:
+                if j not in all_emps_under:
+                    all_emps_under.append(j)
+    if name == 'Agent':
+        all_emps_under = all_emps_under
+        data = {'emp': emp, 'all_emp': all_emps_under}
+        return render(request, 'view_emps.html', data)
+    elif name == 'TL':
+        all_tls_under = []
+        for i in all_emps_under:
+            if i not in all_tls_under:
+                if i.emp_desi == 'Team Leader':
+                    all_tls_under.append(i)
+        data = {'emp': emp, 'all_emp': all_tls_under}
+        return render(request, 'view_emps.html', data)
+    elif name == 'AM':
+        all_ams_under = []
+        for i in all_emps_under:
+            if i not in all_ams_under:
+                if i.emp_desi == 'Assistant Manager':
+                    all_ams_under.append(i)
+        data = {'emp': emp, 'all_emp': all_ams_under}
+        return render(request, 'view_emps.html', data)
+    else:
+        messages.info(request, 'Bad Request')
+        return redirect('/dashboard')
+
+def testFun(request):
+    mydate = date.today()
+    month = mydate.month
+    year = mydate.year
+    start_date = date(2022, 5, 1)
+    # start_date += monthdelta.monthdelta(1)
+    # last = calendar.monthrange(year, month)[1]
+    last_date = date(2022, 6, 30)
+    # last_date += monthdelta.monthdelta(1)
+    delta = last_date - start_date
+    date_list = []
+    for i in range(delta.days + 1):
+        day = start_date + timedelta(days=i)
+        date_list.append(day)
+    for i in date_list:
+        profile = Profile.objects.all().exclude(
+            emp_id__in=AttendanceCalendar.objects.filter(date=i).values('emp_id'), agent_status='Attrition')
+        cal = []
+        for j in profile:
+            employees = AttendanceCalendar()
+            employees.date = i
+            employees.emp_id = j.emp_id
+            employees.att_actual = 'Unmarked'
+            employees.emp_name = j.emp_name
+            employees.emp_desi = j.emp_desi
+            employees.team = j.emp_department
+            employees.team_id = j.emp_department_id
+            employees.rm1 = j.emp_rm1
+            employees.rm2 = j.emp_rm2
+            employees.rm3 = j.emp_rm3
+            employees.rm1_id = j.emp_rm1_id
+            employees.rm2_id = j.emp_rm2_id
+            employees.rm3_id = j.emp_rm3_id
+            cal.append(employees)
+        AttendanceCalendar.objects.bulk_create(cal)
+    return redirect('/dashboard')
+
+
+@login_required
+def Reimbursement(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        date = request.POST["date"]
+        type = request.POST["type"]
+        amount = request.POST["amount"]
+        bill = request.FILES["bill"]
+        details = request.POST["details"]
+        ReimbursementTickets.objects.create(
+            profile=profile, date_for=date, type=type, amount=amount, bill=bill, details=details
+        )
+        return redirect('/reimbursement')
+    else:
+        tickets = ReimbursementTickets.objects.filter(profile=profile)
+        data = {'tickets':tickets}
+        return render(request, 'reimbursement.html', data)
+
+
+@login_required
+def editReimbursement(request):
+    if request.method == "POST":
+        id = request.POST["id"]
+        datee = request.POST.get("date")
+        type = request.POST.get("type")
+        amount = request.POST.get("amount")
+        bill = request.FILES.get("bill")
+        details = request.POST.get("details")
+        e = ReimbursementTickets.objects.get(id=id)
+        if datee:
+            e.date_for = datee
+        if type:
+            e.type = type
+        if amount:
+            e.amount = amount
+        if bill:
+            e.bill = bill
+        if details:
+            e.details = details
+        e.save()
+        return redirect('/reimbursement')
+    else:
+        messages.info(request, 'Bad Request')
+        return redirect('/dashboard')
+
+@login_required
+def deleteReimbursement(request):
+    if request.method == "POST":
+        id = request.POST["id"]
+        e = ReimbursementTickets.objects.get(id=id)
+        os.remove("media/"+str(e.bill))
+        e.delete()
+        return redirect('/reimbursement')
+    else:
+        messages.info(request, 'Bad Request')
+        return redirect('/dashboard')
+
+@login_required
+def viewReimbursement(request):
+    if request.method == "POST":
+        id = request.POST["id"]
+        response = request.POST.get("response")
+        approval_comments = request.POST.get("comments")
+        e = ReimbursementTickets.objects.get(id=id)
+        if response:
+            e.approved_by = request.user.profile.emp_name
+            e.approved_by_id = request.user.profile.emp_id
+            e.approved_on = date.today()
+            e.approval_comments = approval_comments
+            e.respond = True
+            e.status = response
+        e.save()
+        return redirect('/view-reimbursement')
+    else:
+        emp_id = request.user.profile.emp_id
+        profiles = Profile.objects.filter(Q(emp_rm1_id=emp_id) | Q(emp_rm3_id=emp_id) | Q(emp_rm3_id=emp_id))
+        tickets = ReimbursementTickets.objects.filter(profile__in=profiles, respond=False)
+        data = {'tickets': tickets}
+        return render(request, 'manager/view_reimbursement.html', data)

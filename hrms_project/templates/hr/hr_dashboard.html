@@ -117,8 +117,10 @@ text-align: center;
                         </button>
                       </form>
                       {% elif login == True %}
-                      <h6>Your today's login time</h6>
-                      <h4>{{login_id}}</h4>
+                      <div style="display: block;">
+                        <p>Your today's login time</p>
+                        <h5>{{login_id}}</h5>
+                      </div>
                       {% else %}
                       <h4 id="login_duration_top" style="margin-right: 10px"></h4>
                       <form action="/stop-login" method="POST" enctype="multipart/form-data">
@@ -218,7 +220,7 @@ text-align: center;
                         <h2>RM1</h2>
                       </div>
                       <div class="card-body">
-                        <h3>{{request.user.profile.emp_rm1}}</h3>
+                        <h4>{{request.user.profile.emp_rm1}}</h4>
                       </div>
                     </div>
                   </div>
@@ -228,7 +230,7 @@ text-align: center;
                         <h2>RM2</h2>
                       </div>
                       <div class="card-body">
-                        <h3>{{request.user.profile.emp_rm2}}</h3>
+                        <h4>{{request.user.profile.emp_rm2}}</h4>
                       </div>
                     </div>
                   </div>
@@ -238,7 +240,7 @@ text-align: center;
                         <h2>RM3</h2>
                       </div>
                       <div class="card-body">
-                        <h3>{{request.user.profile.emp_rm3}}</h3>
+                        <h4>{{request.user.profile.emp_rm3}}</h4>
                       </div>
                     </div>
                   </div>
@@ -559,14 +561,10 @@ function myFunction() {
       + minutes + "m " + seconds + "s ";
       document.getElementById("login_duration_top").innerHTML = days + "d " + hours + "h "
       + minutes + "m " + seconds + "s ";
-      document.getElementById("login_duration_header").innerHTML = days + "d " + hours + "h "
-      + minutes + "m " + seconds + "s ";
     }, 1000);
     {% endif %}
 </script>
 
-<!-- jQuery Custom Scroller CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.concat.min.js"></script>
 
 <script type="text/javascript">
     $(document).ready(function () {

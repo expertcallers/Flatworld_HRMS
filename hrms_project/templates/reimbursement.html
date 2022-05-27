@@ -1,0 +1,265 @@
+{% extends 'base_common.html' %}
+
+{% block main %}
+  {% load static %}
+        <!-- page content -->
+        <div class="right_col" role="main">
+          <div class="page-title">
+            <div class="title_left">
+              <h3>Reimbursement</h3>
+            </div>
+          </div>
+          <div class="row">
+              <div class="col-md-12">
+                  <div class="card">
+                      <div class="card-body">
+                          <div class="row">
+                              <div class="col-md-8"></div>
+                              <div class="col-md-4" align="right">
+                                  <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#add">
+                                      <i class="fa fa-plus"> </i> Add New
+                                  </button>
+                              </div>
+                          </div>
+                          <div class="row">
+                              <div class="col-md-12">
+                                  <table id="datatablex" class="table table-striped" style="width:100% !important;">
+                                      <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Request Date</th>
+                                            <th>Date For</th>
+                                            <th>Type</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {% for i in tickets %}
+                                        <tr>
+                                            <td>{{i.id}}</td>
+                                            <td>{{i.submit_date}}</td>
+                                            <td>{{i.date_for}}</td>
+                                            <td>{{i.type}}</td>
+                                            <td>{{i.amount}}</td>
+                                            <td>{{i.status}}</td>
+                                            <td>
+                                                <div style="display: inline-flex;">
+                                                    <button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#view_{{i.id}}">
+                                                      <i class="fa fa-eye"> </i>
+                                                    </button>
+                                                    {% if i.respond == False %}
+                                                    <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#edit_{{i.id}}">
+                                                      <i class="fa fa-pencil"> </i>
+                                                    </button>
+                                                    <form action="/delete-reimbursement" method="POST" enctype="multipart/form-data">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="id" value="{{i.id}}">
+                                                        <button type="submit" onclick="return confirmm();" class="btn btn-sm btn-danger">
+                                                          <i class="fa fa-trash"> </i>
+                                                        </button>
+                                                    </form>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+        </div>
+        <!-- /page content -->
+
+
+<div class="modal fade" id="add" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Add New Reimbursement Request</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form action="" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="modal-body">
+              <div class="row">
+                  <div class="col-md-12">
+                      <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="spend">Date <small>(Date of spend)</small><span class="required">*</span></label>
+                            <input type="date" class="form-control" id="spend" required name="date">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="type">Type <span class="required">*</span></label>
+                            <select name="type" id="type" class="form-control select2" required>
+                                <option value="" disabled selected> -- Please Select -- </option>
+                                <option value="Internet">Internet</option>
+                                <option value="Client">Client</option>
+                                <option value="Hotel">Hotel</option>
+                                <option value="Phone">Phone</option>
+                                <option value="Vehicle">Vehicle</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="amount">Amount <span class="required">*</span></label>
+                            <input type="text" name="amount" id="amount" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="bill">Bill <span class="required">*</span></label>
+                            <input type="file" name="bill" id="bill" class="form-control" required>
+                        </div>
+                        <div class="col-md-12 form-group">
+                            <label for="details">Details <span class="required">*</span></label>
+                            <textarea id="details" name="details" class="form-control" rows="5" required></textarea>
+                        </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% for i in tickets %}
+{% if i.respond == False %}
+<div class="modal fade" id="edit_{{i.id}}" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" >Edit - {{i.id}}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form action="/edit-reimbursement" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="id" value="{{i.id}}">
+          <div class="modal-body">
+              <div class="row">
+                  <div class="col-md-12">
+                      <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="edit_spend_{{i.id}}">Date <small>(Date of spend)</small><span class="required">*</span></label>
+                            <input type="hidden" value="{{i.date_for}}" id="edit_spend_{{i.id}}">
+                            <input type="date" class="form-control" id="edit_spend_{{i.id}}_get" required name="date">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="edit_type_{{i.id}}">Type <span class="required">*</span></label>
+                            <select name="type" id="edit_type_{{i.id}}" class="form-control select2" required>
+                                <option value="" disabled selected> -- Please Select -- </option>
+                                <option value="Internet" {% if i.type == 'Internet'  %}selected{% endif %}>Internet</option>
+                                <option value="Client" {% if i.type == 'Client'  %}selected{% endif %}>Client</option>
+                                <option value="Hotel" {% if i.type == 'Hotel'  %}selected{% endif %}>Hotel</option>
+                                <option value="Phone" {% if i.type == 'Phone'  %}selected{% endif %}>Phone</option>
+                                <option value="Vehicle" {% if i.type == 'Vehicle'  %}selected{% endif %}>Vehicle</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="edit_amount_{{i.id}}">Amount <span class="required">*</span></label>
+                            <input type="text" name="amount" value="{{i.amount}}" id="edit_amount_{{i.id}}" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="edit_bill_{{i.id}}">Bill <span class="required">*</span></label>
+                            <a href="/media/{{i.bill}}" target="_blank" class="btn btn-success form-control">View Bill</a>
+                            <input type="file" name="bill" id="edit_bill_{{i.id}}" class="form-control">
+                        </div>
+                        <div class="col-md-12 form-group">
+                            <label for="edit_details_{{i.id}}">Details <span class="required">*</span></label>
+                            <textarea id="edit_details_{{i.id}}" name="details" class="form-control" rows="5" required>{{i.details}}</textarea>
+                        </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+{% for i in tickets %}
+<div class="modal fade" id="view_{{i.id}}" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" >View - {{i.id}}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <div class="row">
+              <div class="col-md-12">
+                  <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label for="view_spend_{{i.id}}">Date <small>(Date of spend)</small><span class="required">*</span></label>
+                        <input type="text" class="form-control" id="view_spend_{{i.id}}" disabled value="{{i.date_for}}">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="view_type_{{i.id}}">Type <span class="required">*</span></label>
+                        <input type="text"  id="view_type_{{i.id}}" class="form-control" disabled value="{{i.type}}">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="view_amount_{{i.id}}">Amount <span class="required">*</span></label>
+                        <input type="text" name="amount" id="view_amount_{{i.id}}" value="{{i.amount}}" class="form-control" disabled>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="view_bill_{{i.id}}">Bill <span class="required">*</span></label>
+                        <a href="/media/{{i.bill}}" target="_blank" id="view_bill_{{i.id}}" class="btn btn-success form-control">View Bill</a>
+                    </div>
+                    <div class="col-md-12 form-group">
+                        <label for="view_details_{{i.id}}">Details</label>
+                        <textarea id="view_details_{{i.id}}" name="details" disabled class="form-control" rows="5">{{i.details}}</textarea>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="view_approved_{{i.id}}">Respond by</label>
+                        <input type="text" id="view_approved_{{i.id}}" value="{% if i.approved_by %}{{i.approved_by}}{% else %}Pending{% endif %}" disabled class="form-control">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="view_status_{{i.id}}">Status</label>
+                        <input type="text" id="view_status_{{i.id}}" value="{{i.status}}" disabled class="form-control">
+                    </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block script %}
+<script>
+  $('#datatablex').DataTable( {
+      responsive: true
+  } );
+
+{% for i in tickets %}
+    {% if i.respond == False %}
+        $given = document.getElementById("edit_spend_{{i.id}}").value
+        $('#edit_spend_{{i.id}}_get').val(moment($given).format('YYYY-MM-DD'));
+    {% endif %}
+{% endfor %}
+</script>
+{% endblock %}

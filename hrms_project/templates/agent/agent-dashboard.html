@@ -4,7 +4,7 @@
 
         <!-- page content -->
         <div class="right_col" role="main">
-          <div class="row" id="navbar" style="background: #fff; border:1px solid #1ABB9C; padding: 5px 5px 0px 5px; border-radius: 30px;">
+          <div class="row mb-2" id="navbar" style="background: #fff; border:1px solid #1ABB9C; padding: 5px 5px 0px 5px; border-radius: 30px;">
             <div class="col-md-12">
               <div class="welcome">
                 <div class="row">
@@ -18,8 +18,10 @@
                         </button>
                       </form>
                       {% elif login == True %}
-                      <h6>Your today's login time</h6>
-                      <h4>{{login_id}}</h4>
+                      <div style="display: block;">
+                        <p>Your today's login time</p>
+                        <h5>{{login_id}}</h5>
+                      </div>
                       {% else %}
                       <h4 id="login_duration_top" style="margin-right: 10px"></h4>
                       <form action="/stop-login" method="POST" enctype="multipart/form-data">
@@ -65,7 +67,7 @@
                       <h2>RM1</h2>
                     </div>      
                     <div class="card-body">
-                      <h5>{{emp.emp_rm1}}</h5>
+                      <h4>{{emp.emp_rm1}}</h4>
                     </div>              
                   </div>
                 </div>
@@ -75,7 +77,7 @@
                       <h2>RM2</h2>
                     </div>      
                     <div class="card-body">
-                      <h5>{{emp.emp_rm2}}</h5>
+                      <h4>{{emp.emp_rm2}}</h4>
                     </div>              
                   </div>
                 </div>
@@ -85,7 +87,7 @@
                       <h2>RM3</h2>
                     </div>      
                     <div class="card-body">
-                      <h5>{{emp.emp_rm3}}</h5>
+                      <h4>{{emp.emp_rm3}}</h4>
                     </div>              
                   </div>
                 </div>
@@ -170,6 +172,24 @@
 {% endblock %}
 {% block script %}
 
+<script>
+    {% if login == False %}
+    {% elif login == True %}
+    {% else %}
+    var countDownDate = new Date("{{login}}").getTime();
+    var x = setInterval(function() {
+      var now = new Date().getTime();
+      var distance = now - countDownDate ;
+      var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      document.getElementById("login_duration_top").innerHTML = days + "d " + hours + "h "
+      + minutes + "m " + seconds + "s ";
+    }, 1000);
+    {% endif %}
+</script>
+
 <script type="text/javascript">
     var sampleEvents = {
     "monthly": [
@@ -228,5 +248,19 @@
         $end.attr("min", $start);
       }
     </script>
+<script>
+window.onscroll = function() {myFunction()};
+
+var navbar = document.getElementById("navbar");
+var sticky = navbar.offsetTop;
+
+function myFunction() {
+  if (window.pageYOffset >= sticky) {
+    navbar.classList.add("sticky")
+  } else {
+    navbar.classList.remove("sticky");
+  }
+}
+</script>
 {% endblock %}
 

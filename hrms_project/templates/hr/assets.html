@@ -89,7 +89,7 @@
                   <div class="col-md-12">
                       <div class="row">
                         <div class="col-md-6 form-group">
-                            <label for="emp">Employee</label>
+                            <label for="emp">Employee <span class="required">*</span></label>
                             <select name="emp" id="emp" class="form-control select2" required>
                                 <option value="" disabled selected> -- Please Select -- </option>
                                 {% for i in profiles %}
@@ -98,7 +98,7 @@
                             </select>
                         </div>
                         <div class="col-md-6 form-group">
-                            <label for="type">Type of Asset</label>
+                            <label for="type">Type of Asset <span class="required">*</span></label>
                             <select name="type" id="type" class="form-control select2" required>
                                 <option value="" disabled selected> -- Please Select -- </option>
                                 <option value="Computer">Computer</option>
@@ -110,7 +110,7 @@
                             </select>
                         </div>
                         <div class="col-md-6 form-group">
-                            <label for="given">Given Date</label>
+                            <label for="given">Given Date <span class="required">*</span></label>
                             <input type="date" name="given" id="given" class="form-control" required>
                         </div>
                         <div class="col-md-6 form-group">

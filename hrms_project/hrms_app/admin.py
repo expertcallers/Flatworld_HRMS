@@ -54,6 +54,14 @@ class DepartmentsSearch(ImportExportModelAdmin):
     search_fields = ('id', 'name', 'om')
     list_display = ('id', 'name', 'om')
     resource_class = DepartmentsResource
+class ReimbursementTicketsResource(resources.ModelResource):
+  class Meta:
+     model = ReimbursementTickets
+
+class ReimbursementTicketsSearch(ImportExportModelAdmin):
+    search_fields = ('id', 'profile', 'type')
+    list_display = ('profile', 'id',  'type', 'amount', 'respond', 'status')
+    resource_class = ReimbursementTicketsResource
 
 admin.site.register(AttendanceCalendar, AttendanceSearch)
 admin.site.register(Profile, ProfileSearch)
@@ -64,3 +72,4 @@ admin.site.register(AssetsDetails)
 admin.site.register(Departments, DepartmentsSearch)
 admin.site.register(Designation, DesignationSearch)
 admin.site.register(leaveHistory, LeaveHistorySearch)
+admin.site.register(ReimbursementTickets, ReimbursementTicketsSearch)
