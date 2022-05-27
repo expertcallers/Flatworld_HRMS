@@ -75,7 +75,7 @@
         <!-- /page content -->
 
 
-    <!-- Start New Designation Pop-Up -->
+    <!-- Start Pop-Up -->
         {% for i in leave_request %}
       <div class="modal fade" id="view_{{i.id}}" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -154,11 +154,13 @@
         </div>
       </div>
         {% endfor %}
-    <!-- End New Designation Pop-Up -->
+    <!-- End Pop-Up -->
 
-
-
-
-
-
+{% endblock %}
+{% block script %}
+<script>
+  $('#datatablex').DataTable( {
+      responsive: true
+  } );
+</script>
 {% endblock %}

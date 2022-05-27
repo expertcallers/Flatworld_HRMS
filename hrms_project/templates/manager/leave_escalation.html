@@ -158,9 +158,12 @@
         {% endfor %}
     <!-- End Escalation Pop-Up -->
 
+{% endblock %}
 
-
-
-
-
+{% block script %}
+<script>
+  $('#datatablex').DataTable( {
+      responsive: true
+  } );
+</script>
 {% endblock %}
