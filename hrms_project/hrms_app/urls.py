@@ -5,7 +5,7 @@ from .views import *
 urlpatterns = [
     path('', loginPage),
     path('login', loginAndRedirect),
-    path('logout', loginPage),
+    path('logout', logoutFun),
     path('start-login', startLogin),
     path('stop-login', stopLogin),
     path('get-emp', getEmp),

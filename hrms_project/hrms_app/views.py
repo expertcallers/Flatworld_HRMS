@@ -21,12 +21,17 @@ manager_list = ['Manager']
 
 
 # Create your views here.
-def loginPage(request):  # Test1 Test2
-    logout(request)
-    form = AuthenticationForm()
-    data = {'form': form}
-    return render(request, 'login.html', data)
+def loginPage(request):  # Test1
+    if request.user.is_authenticated:
+        return redirect("/dashboard")
+    else:
+        form = AuthenticationForm()
+        data = {'form': form}
+        return render(request, 'login.html', data)
 
+def logoutFun(request):
+    logout(request)
+    return redirect("/")
 
 def loginAndRedirect(request):
     if request.method == 'POST':
