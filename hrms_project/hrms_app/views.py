@@ -342,7 +342,7 @@ def startLogin(request):
             LoginHistory.objects.create(
                 profile=profile, date=date.today(), login=datetime.now()
             )
-        return redirect('/hr-dashboard')
+        return redirect('/dashboard')
     else:
         messages.info(request, 'Invalid Request')
         return redirect("/")
